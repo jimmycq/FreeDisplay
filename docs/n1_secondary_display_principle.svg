@@ -1,0 +1,401 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1240" width="1600" height="1240">
+  <style>
+    text { font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', 'Microsoft JhengHei', 'SimHei', sans-serif; }
+  </style>
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#059669"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/>
+    </marker>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#111827" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1240" fill="#ffffff"/>
+  <text x="40" y="52" font-size="26" font-weight="700" fill="#111827">N1 副屏功能原理说明图</text>
+  <text x="40" y="78" font-size="13" fill="#6b7280">AirPlay 2 / Miracast 双协议接收 · 视频音频播放 · UIBC 与 ADB 反向控制 · UI 状态与生命周期</text>
+  <rect x="40" y="100" width="1520" height="140" rx="10" fill="#2563eb" fill-opacity="0.045" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="54" y="118" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#2563eb">01  接入与入口</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="124" width="180" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="70" y="124" width="7" height="92" rx="3" fill="#2563eb"/>
+  <circle cx="100" cy="151" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="100" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">AP</text>
+  <text x="124" y="151" font-size="14" font-weight="700" fill="#111827">AirPlay 源</text>
+  <text x="88" y="177" font-size="11.5" fill="#4b5563">Mac / iOS 镜像</text>
+  <text x="88" y="194" font-size="11.5" fill="#4b5563">屏幕镜像投送</text>
+  <g filter="url(#shadow)">
+    <rect x="280" y="124" width="210" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="280" y="124" width="7" height="92" rx="3" fill="#dc2626"/>
+  <circle cx="310" cy="151" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="310" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">HW</text>
+  <text x="334" y="151" font-size="14" font-weight="700" fill="#111827">华为电脑模式</text>
+  <text x="298" y="177" font-size="11.5" fill="#4b5563">Miracast 源</text>
+  <text x="298" y="194" font-size="11.5" fill="#4b5563">手机屏幕=触控板</text>
+  <g filter="url(#shadow)">
+    <rect x="520" y="124" width="190" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="520" y="124" width="7" height="92" rx="3" fill="#dc2626"/>
+  <circle cx="550" cy="151" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="550" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">WFD</text>
+  <text x="574" y="151" font-size="14" font-weight="700" fill="#111827">标准 Miracast</text>
+  <text x="538" y="177" font-size="11.5" fill="#4b5563">Android / Windows</text>
+  <text x="538" y="194" font-size="11.5" fill="#4b5563">Win+K</text>
+  <g filter="url(#shadow)">
+    <rect x="740" y="124" width="210" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="740" y="124" width="7" height="92" rx="3" fill="#059669"/>
+  <circle cx="770" cy="151" r="15" fill="#059669" opacity="0.14"/>
+  <text x="770" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">UI</text>
+  <text x="794" y="151" font-size="14" font-weight="700" fill="#111827">入口与开关</text>
+  <text x="758" y="177" font-size="11.5" fill="#4b5563">Dashboard</text>
+  <text x="758" y="194" font-size="11.5" fill="#4b5563">通知栏 Quick Control</text>
+  <g filter="url(#shadow)">
+    <rect x="990" y="124" width="280" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="990" y="124" width="7" height="92" rx="3" fill="#2563eb"/>
+  <circle cx="1020" cy="151" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="1020" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">APP</text>
+  <text x="1044" y="151" font-size="14" font-weight="700" fill="#111827">AirPlayDisplayActivity</text>
+  <text x="1008" y="177" font-size="11.5" fill="#4b5563">统一副屏 Activity</text>
+  <text x="1008" y="194" font-size="11.5" fill="#4b5563">双协议栈 / 生命周期</text>
+  <g filter="url(#shadow)">
+    <rect x="1310" y="124" width="230" height="92" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1310" y="124" width="7" height="92" rx="3" fill="#059669"/>
+  <circle cx="1340" cy="151" r="15" fill="#059669" opacity="0.14"/>
+  <text x="1340" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">ST</text>
+  <text x="1364" y="151" font-size="14" font-weight="700" fill="#111827">状态仲裁</text>
+  <text x="1328" y="177" font-size="11.5" fill="#4b5563">activeSource: MAC / HUAWEI</text>
+  <text x="1328" y="194" font-size="11.5" fill="#4b5563">5s 切换抑制窗口</text>
+  <path d="M 160,216 L 160,230" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 385,216 L 385,230" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 615,216 L 615,230" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 160,230 L 1130,230" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 1130,230 L 1130,216" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <rect x="609.0" y="210" width="62.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#2563eb" stroke-opacity="0.25"/>
+  <text x="640" y="223.5" text-anchor="middle" font-size="11.5" fill="#2563eb">启动副屏</text>
+  <path d="M 950,170 L 990,170" fill="none" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <path d="M 1270,170 L 1310,170" fill="none" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <rect x="40" y="270" width="1520" height="210" rx="10" fill="#2563eb" fill-opacity="0.045" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="54" y="288" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#2563eb">02  协议发现与信令</text>
+  <rect x="60" y="300" width="730" height="160" rx="8" fill="#eff6ff" fill-opacity="0.45" stroke="#bfdbfe" stroke-dasharray="6,4"/>
+  <text x="76" y="318" font-size="11" font-weight="700" fill="#2563eb">AIRPLAY 2 STACK</text>
+  <rect x="810" y="300" width="730" height="160" rx="8" fill="#fef2f2" fill-opacity="0.42" stroke="#fecaca" stroke-dasharray="6,4"/>
+  <text x="826" y="318" font-size="11" font-weight="700" fill="#dc2626">MIRACAST / WFD SINK</text>
+  <g filter="url(#shadow)">
+    <rect x="80" y="326" width="160" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="80" y="326" width="7" height="104" rx="3" fill="#2563eb"/>
+  <circle cx="110" cy="353" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="110" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">AP</text>
+  <text x="134" y="353" font-size="14" font-weight="700" fill="#111827">发现与控制</text>
+  <text x="98" y="379" font-size="11.5" fill="#4b5563">7000 控制 / 7100 视频</text>
+  <text x="98" y="396" font-size="11.5" fill="#4b5563">_airplay / _raop</text>
+  <g filter="url(#shadow)">
+    <rect x="260" y="326" width="180" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="260" y="326" width="7" height="104" rx="3" fill="#2563eb"/>
+  <circle cx="290" cy="353" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="290" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">CTL</text>
+  <text x="314" y="353" font-size="14" font-weight="700" fill="#111827">ControlServer</text>
+  <text x="278" y="379" font-size="11.5" fill="#4b5563">Pairing / FairPlay</text>
+  <text x="278" y="396" font-size="11.5" fill="#4b5563">RTSP / HeartBeat</text>
+  <g filter="url(#shadow)">
+    <rect x="460" y="326" width="160" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="460" y="326" width="7" height="104" rx="3" fill="#2563eb"/>
+  <circle cx="490" cy="353" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="490" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">MR</text>
+  <text x="514" y="353" font-size="14" font-weight="700" fill="#111827">镜像接收</text>
+  <text x="478" y="379" font-size="11.5" fill="#4b5563">TCP 7100</text>
+  <text x="478" y="396" font-size="11.5" fill="#4b5563">MirroringReceiver</text>
+  <g filter="url(#shadow)">
+    <rect x="640" y="326" width="130" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="640" y="326" width="7" height="104" rx="3" fill="#2563eb"/>
+  <circle cx="670" cy="353" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="670" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">FP</text>
+  <text x="694" y="353" font-size="14" font-weight="700" fill="#111827">FairPlay</text>
+  <text x="658" y="379" font-size="11.5" fill="#4b5563">视频解密</text>
+  <text x="658" y="396" font-size="11.5" fill="#4b5563">AVCC 载荷</text>
+  <g filter="url(#shadow)">
+    <rect x="830" y="326" width="170" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="830" y="326" width="7" height="104" rx="3" fill="#dc2626"/>
+  <circle cx="860" cy="353" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="860" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">P2P</text>
+  <text x="884" y="353" font-size="14" font-weight="700" fill="#111827">P2P Manager</text>
+  <text x="848" y="379" font-size="11.5" fill="#4b5563">Primary Sink</text>
+  <text x="848" y="396" font-size="11.5" fill="#4b5563">192.168.49.1</text>
+  <g filter="url(#shadow)">
+    <rect x="1020" y="326" width="160" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1020" y="326" width="7" height="104" rx="3" fill="#dc2626"/>
+  <circle cx="1050" cy="353" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="1050" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">RTSP</text>
+  <text x="1074" y="353" font-size="14" font-weight="700" fill="#111827">RTSP M1–M7</text>
+  <text x="1038" y="379" font-size="11.5" fill="#4b5563">7236 信令</text>
+  <text x="1038" y="396" font-size="11.5" fill="#4b5563">video / audio / uibc</text>
+  <g filter="url(#shadow)">
+    <rect x="1200" y="326" width="150" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1200" y="326" width="7" height="104" rx="3" fill="#dc2626"/>
+  <circle cx="1230" cy="353" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="1230" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">TS</text>
+  <text x="1254" y="353" font-size="14" font-weight="700" fill="#111827">MpegTS</text>
+  <text x="1218" y="379" font-size="11.5" fill="#4b5563">UDP 19000</text>
+  <text x="1218" y="396" font-size="11.5" fill="#4b5563">TS 解复用</text>
+  <g filter="url(#shadow)">
+    <rect x="1370" y="326" width="150" height="104" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1370" y="326" width="7" height="104" rx="3" fill="#9333ea"/>
+  <circle cx="1400" cy="353" r="15" fill="#9333ea" opacity="0.14"/>
+  <text x="1400" y="357" text-anchor="middle" font-size="10" font-weight="700" fill="#9333ea">UIBC</text>
+  <text x="1424" y="353" font-size="14" font-weight="700" fill="#111827">UIBC 协商</text>
+  <text x="1388" y="379" font-size="11.5" fill="#4b5563">enable / port</text>
+  <text x="1388" y="396" font-size="11.5" fill="#4b5563">触发 TCP 回传</text>
+  <path d="M 1130,216 L 1130,252 L 160,252 L 160,300" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 1130,216 L 1130,260 L 1010,260 L 1010,300" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <rect x="573.0" y="235" width="134.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#2563eb" stroke-opacity="0.25"/>
+  <text x="640" y="248.5" text-anchor="middle" font-size="11.5" fill="#2563eb">AirPlay 启动</text>
+  <rect x="1007.0" y="243" width="86.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#dc2626" stroke-opacity="0.25"/>
+  <text x="1050" y="256.5" text-anchor="middle" font-size="11.5" fill="#dc2626">WFD 启动</text>
+  <path d="M 240,378 L 260,378" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 440,378 L 460,378" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 620,378 L 640,378" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 1000,378 L 1020,378" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <path d="M 1180,378 L 1200,378" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <path d="M 1350,378 L 1370,378" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <rect x="40" y="510" width="1520" height="220" rx="10" fill="#059669" fill-opacity="0.045" stroke="#059669" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="54" y="528" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#059669">03  流接收 / 解码 / 播放</text>
+  <rect x="60" y="536" width="430" height="150" rx="8" fill="#f0fdf4" fill-opacity="0.45" stroke="#bbf7d0" stroke-dasharray="6,4"/>
+  <text x="76" y="554" font-size="11" font-weight="700" fill="#059669">PARSE &amp; PACKETIZE</text>
+  <rect x="510" y="536" width="530" height="150" rx="8" fill="#eff6ff" fill-opacity="0.42" stroke="#bfdbfe" stroke-dasharray="6,4"/>
+  <text x="526" y="554" font-size="11" font-weight="700" fill="#2563eb">DECODE &amp; DISPLAY</text>
+  <rect x="1060" y="536" width="480" height="150" rx="8" fill="#faf5ff" fill-opacity="0.42" stroke="#e9d5ff" stroke-dasharray="6,4"/>
+  <text x="1076" y="554" font-size="11" font-weight="700" fill="#9333ea">AUDIO ROUTING</text>
+  <g filter="url(#shadow)">
+    <rect x="80" y="568" width="190" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="80" y="568" width="7" height="100" rx="3" fill="#059669"/>
+  <circle cx="110" cy="595" r="15" fill="#059669" opacity="0.14"/>
+  <text x="110" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">PKT</text>
+  <text x="134" y="595" font-size="14" font-weight="700" fill="#111827">NAL / PCM 封装</text>
+  <text x="98" y="621" font-size="11.5" fill="#4b5563">AVCC → Annex B</text>
+  <text x="98" y="638" font-size="11.5" fill="#4b5563">NALPacket / PCMPacket</text>
+  <g filter="url(#shadow)">
+    <rect x="290" y="568" width="180" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="290" y="568" width="7" height="100" rx="3" fill="#059669"/>
+  <circle cx="320" cy="595" r="15" fill="#059669" opacity="0.14"/>
+  <text x="320" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">CB</text>
+  <text x="344" y="595" font-size="14" font-weight="700" fill="#111827">数据消费者</text>
+  <text x="308" y="621" font-size="11.5" fill="#4b5563">onVideo / onAudio</text>
+  <text x="308" y="638" font-size="11.5" fill="#4b5563">帧缓存与首帧</text>
+  <g filter="url(#shadow)">
+    <rect x="540" y="568" width="220" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="540" y="568" width="7" height="100" rx="3" fill="#2563eb"/>
+  <circle cx="570" cy="595" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="570" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">DEC</text>
+  <text x="594" y="595" font-size="14" font-weight="700" fill="#111827">VideoPlayer</text>
+  <text x="558" y="621" font-size="11.5" fill="#4b5563">MediaCodec AVC</text>
+  <text x="558" y="638" font-size="11.5" fill="#4b5563">120 帧低延迟队列</text>
+  <g filter="url(#shadow)">
+    <rect x="780" y="568" width="230" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="780" y="568" width="7" height="100" rx="3" fill="#2563eb"/>
+  <circle cx="810" cy="595" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="810" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">SUR</text>
+  <text x="834" y="595" font-size="14" font-weight="700" fill="#111827">PlaySurfaceView</text>
+  <text x="798" y="621" font-size="11.5" fill="#4b5563">FIT / ZOOM / FILL / 1:1</text>
+  <text x="798" y="638" font-size="11.5" fill="#4b5563">硬件叠加 / 旋转</text>
+  <g filter="url(#shadow)">
+    <rect x="1080" y="568" width="190" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1080" y="568" width="7" height="100" rx="3" fill="#9333ea"/>
+  <circle cx="1110" cy="595" r="15" fill="#9333ea" opacity="0.14"/>
+  <text x="1110" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#9333ea">AUD</text>
+  <text x="1134" y="595" font-size="14" font-weight="700" fill="#111827">AudioPlayer</text>
+  <text x="1098" y="621" font-size="11.5" fill="#4b5563">AAC → AudioTrack</text>
+  <text x="1098" y="638" font-size="11.5" fill="#4b5563">副屏发声</text>
+  <g filter="url(#shadow)">
+    <rect x="1290" y="568" width="220" height="100" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1290" y="568" width="7" height="100" rx="3" fill="#9333ea"/>
+  <circle cx="1320" cy="595" r="15" fill="#9333ea" opacity="0.14"/>
+  <text x="1320" y="599" text-anchor="middle" font-size="10" font-weight="700" fill="#9333ea">RT</text>
+  <text x="1344" y="595" font-size="14" font-weight="700" fill="#111827">音频路由</text>
+  <text x="1308" y="621" font-size="11.5" fill="#4b5563">本机发声 / 副屏发声</text>
+  <text x="1308" y="638" font-size="11.5" fill="#4b5563">MiracastAudioPlayer</text>
+  <path d="M 540,430 L 540,488 L 175,488 L 175,568" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 1275,430 L 1275,500 L 650,500 L 650,568" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <path d="M 1340,430 L 1340,520 L 1400,520 L 1400,568" fill="none" stroke="#9333ea" stroke-width="1.8" marker-end="url(#arrow-purple)"/>
+  <rect x="279.0" y="470" width="122.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#2563eb" stroke-opacity="0.25"/>
+  <text x="340" y="483.5" text-anchor="middle" font-size="11.5" fill="#2563eb">RTSP / 解密</text>
+  <rect x="905.0" y="482" width="110.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#dc2626" stroke-opacity="0.25"/>
+  <text x="960" y="495.5" text-anchor="middle" font-size="11.5" fill="#dc2626">TS / PES</text>
+  <path d="M 270,618 L 290,618" fill="none" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <path d="M 470,618 L 540,618" fill="none" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <path d="M 760,618 L 780,618" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+  <path d="M 470,640 L 1080,640 L 1080,638" fill="none" stroke="#9333ea" stroke-width="1.8" marker-end="url(#arrow-purple)" stroke-dasharray="5,3"/>
+  <rect x="40" y="760" width="1520" height="230" rx="10" fill="#ea580c" fill-opacity="0.045" stroke="#ea580c" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="54" y="778" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ea580c">04  反向控制：UIBC 与 ADB</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="790" width="180" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="70" y="790" width="7" height="150" rx="3" fill="#ea580c"/>
+  <circle cx="100" cy="817" r="15" fill="#ea580c" opacity="0.14"/>
+  <text x="100" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#ea580c">IN</text>
+  <text x="124" y="817" font-size="14" font-weight="700" fill="#111827">SurfaceView 触点</text>
+  <text x="88" y="843" font-size="11.5" fill="#4b5563">ACTION_DOWN/UP/MOVE</text>
+  <text x="88" y="860" font-size="11.5" fill="#4b5563">view 2048×1152</text>
+  <g filter="url(#shadow)">
+    <rect x="280" y="790" width="220" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="280" y="790" width="7" height="150" rx="3" fill="#ea580c"/>
+  <circle cx="310" cy="817" r="15" fill="#ea580c" opacity="0.14"/>
+  <text x="310" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#ea580c">GS</text>
+  <text x="334" y="817" font-size="14" font-weight="700" fill="#111827">手势语义</text>
+  <text x="298" y="843" font-size="11.5" fill="#4b5563">轻点 → 单击</text>
+  <text x="298" y="860" font-size="11.5" fill="#4b5563">长按 500ms → 双击</text>
+  <text x="298" y="877" font-size="11.5" fill="#4b5563">滑动 → 触控板</text>
+  <g filter="url(#shadow)">
+    <rect x="530" y="790" width="200" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="530" y="790" width="7" height="150" rx="3" fill="#ea580c"/>
+  <circle cx="560" cy="817" r="15" fill="#ea580c" opacity="0.14"/>
+  <text x="560" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#ea580c">MAP</text>
+  <text x="584" y="817" font-size="14" font-weight="700" fill="#111827">坐标映射</text>
+  <text x="548" y="843" font-size="11.5" fill="#4b5563">view → 1280×800</text>
+  <text x="548" y="860" font-size="11.5" fill="#4b5563">displayId 动态识别</text>
+  <g filter="url(#shadow)">
+    <rect x="760" y="790" width="230" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="760" y="790" width="7" height="150" rx="3" fill="#ea580c"/>
+  <circle cx="790" cy="817" r="15" fill="#ea580c" opacity="0.14"/>
+  <text x="790" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#ea580c">ADB</text>
+  <text x="814" y="817" font-size="14" font-weight="700" fill="#111827">AdbInputController</text>
+  <text x="778" y="843" font-size="11.5" fill="#4b5563">免 root / adb :5555</text>
+  <text x="778" y="860" font-size="11.5" fill="#4b5563">mouse tap / input tap</text>
+  <text x="778" y="877" font-size="11.5" fill="#4b5563">分段 input swipe</text>
+  <g filter="url(#shadow)">
+    <rect x="1020" y="790" width="200" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1020" y="790" width="7" height="150" rx="3" fill="#9333ea"/>
+  <circle cx="1050" cy="817" r="15" fill="#9333ea" opacity="0.14"/>
+  <text x="1050" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#9333ea">UIBC</text>
+  <text x="1074" y="817" font-size="14" font-weight="700" fill="#111827">UIBC Client</text>
+  <text x="1038" y="843" font-size="11.5" fill="#4b5563">HIDC / GENERIC Mouse</text>
+  <text x="1038" y="860" font-size="11.5" fill="#4b5563">TCP 05/06 报文</text>
+  <g filter="url(#shadow)">
+    <rect x="1250" y="790" width="280" height="150" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1250" y="790" width="7" height="150" rx="3" fill="#dc2626"/>
+  <circle cx="1280" cy="817" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="1280" y="821" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">SRC</text>
+  <text x="1304" y="817" font-size="14" font-weight="700" fill="#111827">华为源端桌面</text>
+  <text x="1268" y="843" font-size="11.5" fill="#4b5563">外投 display 动态 ID</text>
+  <text x="1268" y="860" font-size="11.5" fill="#4b5563">手机主屏 1084×2412 = 触控板</text>
+  <path d="M 895,668 L 895,724 L 160,724 L 160,790" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <rect x="417.0" y="706" width="206.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#ea580c" stroke-opacity="0.25"/>
+  <text x="520" y="719.5" text-anchor="middle" font-size="11.5" fill="#ea580c">hasReceivedFrame</text>
+  <path d="M 250,865 L 280,865" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <path d="M 500,830 L 530,830" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <path d="M 500,900 L 760,900" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <rect x="593.0" y="882" width="74.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#ea580c" stroke-opacity="0.25"/>
+  <text x="630" y="895.5" text-anchor="middle" font-size="11.5" fill="#ea580c">长按/滑动</text>
+  <path d="M 730,865 L 760,865" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <rect x="724.0" y="836" width="42.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#ea580c" stroke-opacity="0.25"/>
+  <text x="745" y="849.5" text-anchor="middle" font-size="11.5" fill="#ea580c">轻点</text>
+  <path d="M 990,865 L 1250,865" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <rect x="1049.0" y="846" width="122.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#ea580c" stroke-opacity="0.25"/>
+  <text x="1110" y="859.5" text-anchor="middle" font-size="11.5" fill="#ea580c">免 root 注入</text>
+  <path d="M 500,845 L 1020,845" fill="none" stroke="#9333ea" stroke-width="1.8" marker-end="url(#arrow-purple)" stroke-dasharray="6,3"/>
+  <rect x="729.0" y="826" width="62.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#9333ea" stroke-opacity="0.25"/>
+  <text x="760" y="839.5" text-anchor="middle" font-size="11.5" fill="#9333ea">实验链路</text>
+  <path d="M 1220,865 L 1250,865" fill="none" stroke="#9333ea" stroke-width="1.8" marker-end="url(#arrow-purple)" stroke-dasharray="6,3"/>
+  <rect x="1210.0" y="836" width="50.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#9333ea" stroke-opacity="0.25"/>
+  <text x="1235" y="849.5" text-anchor="middle" font-size="11.5" fill="#9333ea">未注入</text>
+  <rect x="40" y="1020" width="1520" height="130" rx="10" fill="#6b7280" fill-opacity="0.045" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="54" y="1038" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#6b7280">05  UI / 状态 / 生命周期</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="1046" width="210" height="86" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="70" y="1046" width="7" height="86" rx="3" fill="#059669"/>
+  <circle cx="100" cy="1073" r="15" fill="#059669" opacity="0.14"/>
+  <text x="100" y="1077" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">UI</text>
+  <text x="124" y="1073" font-size="14" font-weight="700" fill="#111827">等待页 / 状态</text>
+  <text x="88" y="1099" font-size="11.5" fill="#4b5563">首帧后隐藏</text>
+  <text x="88" y="1116" font-size="11.5" fill="#4b5563">网络信息 3s 轮询</text>
+  <g filter="url(#shadow)">
+    <rect x="310" y="1046" width="250" height="86" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="310" y="1046" width="7" height="86" rx="3" fill="#2563eb"/>
+  <circle cx="340" cy="1073" r="15" fill="#2563eb" opacity="0.14"/>
+  <text x="340" y="1077" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">CFG</text>
+  <text x="364" y="1073" font-size="14" font-weight="700" fill="#111827">控制卡片 / 抽屉</text>
+  <text x="328" y="1099" font-size="11.5" fill="#4b5563">画质 / 音频 / 缩放 / 旋转</text>
+  <text x="328" y="1116" font-size="11.5" fill="#4b5563">重命名 / 关于 / 退出</text>
+  <g filter="url(#shadow)">
+    <rect x="590" y="1046" width="250" height="86" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="590" y="1046" width="7" height="86" rx="3" fill="#dc2626"/>
+  <circle cx="620" cy="1073" r="15" fill="#dc2626" opacity="0.14"/>
+  <text x="620" y="1077" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">SW</text>
+  <text x="644" y="1073" font-size="14" font-weight="700" fill="#111827">设备切换仲裁</text>
+  <text x="608" y="1099" font-size="11.5" fill="#4b5563">Mac / 华为冲突</text>
+  <text x="608" y="1116" font-size="11.5" fill="#4b5563">5s 抑制 + 切断旧会话</text>
+  <g filter="url(#shadow)">
+    <rect x="870" y="1046" width="240" height="86" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="870" y="1046" width="7" height="86" rx="3" fill="#6b7280"/>
+  <circle cx="900" cy="1073" r="15" fill="#6b7280" opacity="0.14"/>
+  <text x="900" y="1077" text-anchor="middle" font-size="10" font-weight="700" fill="#6b7280">LC</text>
+  <text x="924" y="1073" font-size="14" font-weight="700" fill="#111827">连接生命周期</text>
+  <text x="888" y="1099" font-size="11.5" fill="#4b5563">首帧 / 断线 / reset</text>
+  <text x="888" y="1116" font-size="11.5" fill="#4b5563">P2P / UIBC / ADB 清理</text>
+  <g filter="url(#shadow)">
+    <rect x="1140" y="1046" width="390" height="86" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  </g>
+  <rect x="1140" y="1046" width="7" height="86" rx="3" fill="#9333ea"/>
+  <circle cx="1170" cy="1073" r="15" fill="#9333ea" opacity="0.14"/>
+  <text x="1170" y="1077" text-anchor="middle" font-size="10" font-weight="700" fill="#9333ea">DOC</text>
+  <text x="1194" y="1073" font-size="14" font-weight="700" fill="#111827">验证结论</text>
+  <text x="1158" y="1099" font-size="11.5" fill="#4b5563">AirPlay 无标准反向触控；UIBC 华为不注入</text>
+  <text x="1158" y="1116" font-size="11.5" fill="#4b5563">ADB 免 root 为当前可行路径</text>
+  <path d="M 175,940 L 175,1046" fill="none" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow-gray)" stroke-dasharray="4,3"/>
+  <path d="M 1130,940 L 1130,1046" fill="none" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow-gray)" stroke-dasharray="4,3"/>
+  <rect x="1094.0" y="983" width="62.0" height="19" rx="4" fill="#ffffff" opacity="0.96" stroke="#6b7280" stroke-opacity="0.25"/>
+  <text x="1125" y="996.5" text-anchor="middle" font-size="11.5" fill="#6b7280">状态回写</text>
+  <rect x="40" y="1172" width="1520" height="48" rx="8" fill="#f9fafb" stroke="#e5e7eb"/>
+  <line x1="62" y1="1196" x2="96" y2="1196" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="104" y="1201" font-size="11.5" fill="#4b5563">主媒体流 / AirPlay</text>
+  <line x1="312" y1="1196" x2="346" y2="1196" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow-red)"/>
+  <text x="354" y="1201" font-size="11.5" fill="#4b5563">Miracast / 源端</text>
+  <line x1="562" y1="1196" x2="596" y2="1196" stroke="#059669" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <text x="604" y="1201" font-size="11.5" fill="#4b5563">状态与数据回调</text>
+  <line x1="812" y1="1196" x2="846" y2="1196" stroke="#ea580c" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <text x="854" y="1201" font-size="11.5" fill="#4b5563">ADB 反向输入</text>
+  <line x1="1062" y1="1196" x2="1096" y2="1196" stroke="#9333ea" stroke-width="2" marker-end="url(#arrow-purple)"/>
+  <text x="1104" y="1201" font-size="11.5" fill="#4b5563">UIBC 实验 / 音频 / 结论</text>
+  <line x1="1312" y1="1196" x2="1346" y2="1196" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <text x="1354" y="1201" font-size="11.5" fill="#4b5563">生命周期 / 清理</text>
+</svg>

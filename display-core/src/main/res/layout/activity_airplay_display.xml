@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <com.n1tools.box.airplay.view.PlaySurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <!-- 等待连接提示遮罩 -->
+    <!-- 等待连接提示面板（待机加框系统所有内容） -->
+    <LinearLayout
+        android:id="@+id/waitingOverlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="@drawable/bg_standby_panel">
+
+        <TextView
+            android:id="@+id/tvDisplayTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Free Display"
+            android:textColor="#ffffff"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <!-- 重命名：直接放在设备名称下方 -->
+        <TextView
+            android:id="@+id/btnStandbyRename"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_control_item"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:gravity="center"
+            android:text="✏ 点击修改名称"
+            android:textColor="#38bdf8"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvAirPlayStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="等待无线投屏连接..."
+            android:textColor="#3b82f6"
+            android:textSize="15sp" />
+
+        <!-- 网络环境信息与快速切换 -->
+        <LinearLayout
+            android:id="@+id/layoutNetworkSection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNetworkInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="网络: 获取中..."
+                android:textColor="#94a3b8"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnSwitchNetworkMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="⚡ 切换为快速热点"
+                    android:textColor="#38bdf8"
+                    android:textSize="11.5sp" />
+
+                <TextView
+                    android:id="@+id/btnStandbyQrCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="📷 扫码加入"
+                    android:textColor="#22c55e"
+                    android:textSize="11.5sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 待机提示信息（卡片内整体展现） -->
+        <TextView
+            android:id="@+id/tvInstructionGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="• 电脑端连接：控制中心 ➔「屏幕镜像 / 投影」➔ 选择 Free Display\n• 移动端连接：控制中心 ➔「无线投屏 / 多屏互动」➔ 选择 Free Display\n  (部分机型投屏后下拉通知栏可切换「电脑/桌面模式」)\n• 控制中心：轻触屏幕呼出顶部控制栏，支持左右滑动调整设置"
+            android:gravity="start"
+            android:lineSpacingExtra="4dp"
+            android:textColor="#94a3b8"
+            android:textSize="12sp" />
+
+        <!-- 提示信息下方：分享与关于按钮 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btnStandbyShare"
+                android:layout_width="84dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_control_item"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="📤 分享"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnStandbyFeedback"
+                android:layout_width="84dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_control_item"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="💬 反馈"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnStandbyAbout"
+                android:layout_width="84dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_control_item"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="ℹ 关于"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 顶部居中操作栏容器 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp">
+
+        <!-- 展开状态：居中圆角20dp控制卡片，支持左右滑动 -->
+        <HorizontalScrollView
+            android:id="@+id/layoutControlCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_control_card"
+            android:scrollbars="none"
+            android:overScrollMode="ifContentScrolls"
+            android:padding="6dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnExitAirPlay"
+                    android:layout_width="72dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="✕ 退出"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 1. 声音模式 -->
+                <TextView
+                    android:id="@+id/btnAudioMode"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="🔇 声音: 本机"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 2. 画面模式：适应 / 铺满 / 放大 -->
+                <TextView
+                    android:id="@+id/btnScaleMode"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="📐 画面: 适应"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 3. 屏幕方向旋转：自动 / 横屏 / 竖屏 -->
+                <TextView
+                    android:id="@+id/btnRotate"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="🔄 旋转: 自动"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 4. 画质档位切换：超清 / 均衡 / 流畅 -->
+                <TextView
+                    android:id="@+id/btnQualityMode"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="🌟 画质: 超清"
+                    android:textColor="#22c55e"
+                    android:textSize="12sp" />
+
+                <!-- 5. 纯净待机 -->
+                <TextView
+                    android:id="@+id/btnCleanStandby"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="🖼 纯净待机: 关"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 6. 快速热点 -->
+                <TextView
+                    android:id="@+id/btnHotspot"
+                    android:layout_width="112dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="🔥 快速热点: 关"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 7. 分享 -->
+                <TextView
+                    android:id="@+id/btnShare"
+                    android:layout_width="80dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="📤 分享"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 8. 意见反馈 -->
+                <TextView
+                    android:id="@+id/btnFeedback"
+                    android:layout_width="80dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="💬 反馈"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+
+                <!-- 9. 关于 -->
+                <TextView
+                    android:id="@+id/btnAbout"
+                    android:layout_width="80dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:text="ℹ 关于"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- 折叠状态：顶部居中小抽屉图标，圆角20dp，点击呼出 -->
+        <TextView
+            android:id="@+id/btnOpenDrawer"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_control_drawer"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="☰ 控制中心"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- 设备源切换确认弹窗（内置层级Overlay，无惧SurfaceView硬件层遮挡） -->
+    <FrameLayout
+        android:id="@+id/layoutSwitchDeviceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="420dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_control_card"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvSwitchTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="切换投屏设备"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSwitchDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="4dp"
+                android:text="检测到新设备的无线投屏请求。\n是否切换画面？"
+                android:textColor="#cbd5e1"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnKeepCurrentDevice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:text="保持当前画面"
+                    android:textColor="#94a3b8"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/btnSwitchToNewDevice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_control_item"
+                    android:gravity="center"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:text="确认切换"
+                    android:textColor="#38bdf8"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+</FrameLayout>
