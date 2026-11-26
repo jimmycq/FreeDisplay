@@ -30,8 +30,7 @@
 
 | 版本名称 | 产物文件名 | 适用设备与场景 |
 | :--- | :--- | :--- |
-| **N1 专版** | `FreeDisplay-N1-*.apk` | 诺基亚 N1 平板（Intel x86）深度定制版，含底层硬件解码与屏幕比例自适应 |
-| **安卓通用版** | `FreeDisplay-Standalone-*.apk` | 通用 Android 平板 / 手机，免 Root 直接安装使用，全平台 CPU 原生兼容 |
+| **安卓通用版** | `FreeDisplay-v*.*.*.apk` | 通用 Android 平板 / 手机，免 Root 直接安装使用，全平台 CPU 原生兼容 |
 
 ---
 
