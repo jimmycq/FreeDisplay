@@ -68,6 +68,11 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private var isCleanStandby: Boolean = false
     private lateinit var mBtnShare: TextView
     private lateinit var mBtnAbout: TextView
+    private lateinit var mBtnReverseTouch: TextView
+    private lateinit var mBtnMoreControls: TextView
+    private lateinit var mLayoutMorePanel: View
+    private lateinit var mBtnTouchSettings: TextView
+    private var adbPort: Int = 5555
     private lateinit var mTvDisplayTitle: TextView
     private lateinit var mTvInstructionGuide: TextView
     private lateinit var layoutControlCard: HorizontalScrollView
@@ -103,6 +108,16 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     private var multicastLock: WifiManager.MulticastLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
+    private var aboutDialog: android.app.AlertDialog? = null
+    private var activeDialogCount: Int = 0
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (aboutDialog?.isShowing == true) {
+            aboutDialog?.dismiss()
+            showAboutDialog()
+        }
+    }
     private val bgExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
     private var hasReceivedFrame = false
     private var isAntiInterferenceEnabled = true
@@ -238,18 +253,26 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
         mBtnHotspot = findViewById(R.id.btnHotspot)
         mBtnShare = findViewById(R.id.btnShare)
         mBtnAbout = findViewById(R.id.btnAbout)
+        mBtnReverseTouch = findViewById(R.id.btnReverseTouch)
+        mBtnMoreControls = findViewById(R.id.btnMoreControls)
+        mLayoutMorePanel = findViewById(R.id.layoutMorePanel)
+        mBtnTouchSettings = findViewById(R.id.btnTouchSettings)
         mTvDisplayTitle = findViewById(R.id.tvDisplayTitle)
         mTvInstructionGuide = findViewById(R.id.tvInstructionGuide)
 
         mSurfaceView.holder.addCallback(this)
         mBtnExit.setOnClickListener {
             scheduleAutoHideControls(10000L)
-            android.app.AlertDialog.Builder(this)
-                .setTitle("退出副屏")
-                .setMessage("确定要退出无线副屏投屏吗？")
-                .setPositiveButton("退出") { _, _ -> finish() }
-                .setNegativeButton("取消", null)
-                .show()
+            showManagedDialog(
+                com.n1tools.box.ui.glass.GlassUiHelper.createGlassMessageDialog(
+                    context = this,
+                    title = "退出副屏",
+                    message = "确定要退出无线副屏投屏吗？",
+                    positiveText = "退出",
+                    onPositive = { finish() },
+                    negativeText = "取消"
+                )
+            )
         }
 
 
@@ -281,8 +304,30 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         mBtnAbout.setOnClickListener {
             scheduleAutoHideControls(5000L)
+            mLayoutMorePanel.visibility = View.GONE
             showAboutDialog()
         }
+
+        mBtnMoreControls.setOnClickListener {
+            val show = mLayoutMorePanel.visibility != View.VISIBLE
+            mLayoutMorePanel.visibility = if (show) View.VISIBLE else View.GONE
+            mBtnMoreControls.text = if (show) "▲ 收起" else "⋯ 更多"
+            scheduleAutoHideControls(if (show) 9000L else 5000L)
+        }
+
+        mBtnReverseTouch.setOnClickListener {
+            scheduleAutoHideControls(9000L)
+            onReverseTouchButtonClick()
+        }
+
+        mBtnTouchSettings.setOnClickListener {
+            scheduleAutoHideControls(9000L)
+            mLayoutMorePanel.visibility = View.GONE
+            mBtnMoreControls.text = "⋯ 更多"
+            onReverseTouchButtonClick()
+        }
+
+        updateReverseTouchUi()
 
         // 绑定待机界面的控制与关于入口
         findViewById<TextView?>(R.id.btnStandbyRename)?.setOnClickListener {
@@ -301,6 +346,23 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
             scheduleAutoHideControls(5000L)
             openFeedbackUrl()
         }
+
+        // Apple Glass 轻触微缩回弹动效
+        com.n1tools.box.ui.glass.GlassUiHelper.applyPressEffect(
+            mBtnExit, mBtnAudioMode, mBtnScaleMode, mBtnRotate, mBtnQualityMode,
+            mBtnReverseTouch, mBtnMoreControls, mBtnTouchSettings,
+            mBtnCleanStandby, mBtnHotspot, mBtnShare, mBtnAbout,
+            findViewById(R.id.btnOpenDrawer),
+            findViewById(R.id.btnFeedback),
+            findViewById(R.id.btnStandbyRename),
+            findViewById(R.id.btnSwitchNetworkMode),
+            findViewById(R.id.btnStandbyQrCode),
+            findViewById(R.id.btnStandbyShare),
+            findViewById(R.id.btnStandbyFeedback),
+            findViewById(R.id.btnStandbyAbout),
+            findViewById(R.id.btnKeepCurrentDevice),
+            findViewById(R.id.btnSwitchToNewDevice)
+        )
 
         // 启动后延迟 2.5 秒在后台静默检查 GitHub Releases 最新版本更新
         uiUpdateHandler.postDelayed({
@@ -421,19 +483,27 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 Log.i(TAG, "Touch down: source=$activeSource hasFrame=$hasReceivedFrame size=${v.width}x${v.height}")
             }
             if (hasReceivedFrame && activeSource == DisplaySource.HUAWEI) {
-                var controller = adbInputController
-                if (controller == null || !controller.isReady) {
-                    val host = huaweiSourceHost ?: "192.168.49.1"
-                    if (adbInputController == null) {
-                        huaweiSourceHost = host
-                        val newCtrl = AdbInputController(this, host)
-                        adbInputController = newCtrl
-                        newCtrl.connectAsync()
-                        Log.i(TAG, "Auto-connected ADB input controller on touch for $host")
-                        controller = newCtrl
+                if (miracastServer?.isWindowsSource == true) {
+                    val viewWidth = v.width
+                    val viewHeight = v.height
+                    if (viewWidth > 0 && viewHeight > 0) {
+                        miracastServer?.sendTouchEvent(
+                            event.actionMasked, event.x, event.y, viewWidth, viewHeight,
+                            mSurfaceView.getVideoWidth().toInt(), mSurfaceView.getVideoHeight().toInt()
+                        )
                     }
+                    return@setOnTouchListener true
                 }
-                if (controller?.isReady == true) {
+                var controller = adbInputController
+                if (controller == null) {
+                    val host = huaweiSourceHost ?: "192.168.49.1"
+                    controller = attachAdbController(host, adbPort, forceReconnect = false)
+                    Log.i(TAG, "Auto-connected ADB input controller on touch for $host:$adbPort")
+                } else if (!controller.isReady) {
+                    // 带 5 秒节流的断线自愈重连，解决授权晚点确认后永久失灵的问题
+                    controller.ensureConnectedAsync(force = false)
+                }
+                if (controller.isReady) {
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN -> {
                             adbDownX = event.x
@@ -558,34 +628,37 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         val tv = TextView(this).apply {
             text = guideMessage
-            setTextColor(android.graphics.Color.parseColor("#E2E8F0"))
+            setTextColor(androidx.core.content.ContextCompat.getColor(this@AirPlayDisplayActivity, R.color.glass_text_secondary))
             textSize = 13.5f
             setLineSpacing(6f, 1.15f)
-            setPadding(40, 25, 40, 25)
+            setBackgroundResource(R.drawable.bg_instruction_box)
         }
         val scrollView = android.widget.ScrollView(this).apply {
             addView(tv)
         }
 
-        android.app.AlertDialog.Builder(this)
-            .setTitle("权限使用向导与隐私说明")
-            .setView(scrollView)
-            .setCancelable(false)
-            .setPositiveButton("理解并授权") { dialog, _ ->
-                dialog.dismiss()
-                val prefs = getSharedPreferences("display_settings", Context.MODE_PRIVATE)
-                prefs.edit().putBoolean("has_shown_permission_guide", true).apply()
-                ActivityCompat.requestPermissions(
-                    this,
-                    permissions.toTypedArray(),
-                    RC_PERMISSIONS
-                )
-            }
-            .setNegativeButton("稍后设置") { dialog, _ ->
-                dialog.dismiss()
-                android.widget.Toast.makeText(this, "未授予直连权限，移动端点对点直连可能受限；电脑端局域网镜像不受影响", android.widget.Toast.LENGTH_LONG).show()
-            }
-            .show()
+        showManagedDialog(
+            com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+                context = this,
+                title = "权限使用向导与隐私说明",
+                contentView = scrollView,
+                positiveText = "理解并授权",
+                onPositive = {
+                    val prefs = getSharedPreferences("display_settings", Context.MODE_PRIVATE)
+                    prefs.edit().putBoolean("has_shown_permission_guide", true).apply()
+                    ActivityCompat.requestPermissions(
+                        this,
+                        permissions.toTypedArray(),
+                        RC_PERMISSIONS
+                    )
+                },
+                negativeText = "稍后设置",
+                onNegative = {
+                    android.widget.Toast.makeText(this, "未授予直连权限，移动端点对点直连可能受限；电脑端局域网镜像不受影响", android.widget.Toast.LENGTH_LONG).show()
+                },
+                cancelable = false
+            )
+        )
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -622,6 +695,8 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
         if (!isRunning || isFinishing) return
         if (layoutControlCard.visibility != View.VISIBLE) return
 
+        mLayoutMorePanel.visibility = View.GONE
+        mBtnMoreControls.text = "⋯ 更多"
         layoutControlCard.animate().cancel()
         btnOpenDrawer.animate().cancel()
 
@@ -887,11 +962,12 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                         if (!isConnected && activeSource == DisplaySource.HUAWEI) {
                             activeSource = DisplaySource.NONE
                             hasReceivedFrame = false
-                            mWaitingOverlay.visibility = View.VISIBLE
+                            updateWaitingOverlayVisibility()
                             mTvAirPlayStatus.text = "等待设备连接中..."
                             miracastServer?.ensureDiscoverable()
                             adbInputController?.disconnect()
                             adbInputController = null
+                            updateReverseTouchUi()
                             mVideoPlayer?.reset()
                         }
                     }
@@ -909,28 +985,28 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                             activeSource = DisplaySource.HUAWEI
                             hasReceivedFrame = true
                             mWaitingOverlay.visibility = View.GONE
-                            // 华为首帧渲染时，立即预连接 ADB 输入控制器，确保用户点击时已有光标
-                            if (adbInputController == null) {
+                            updateReverseTouchUi()
+                            // 华为/安卓首帧渲染时，立即预连接 ADB 输入控制器；Windows 走 UIBC 不连接 ADB
+                            if (miracastServer?.isWindowsSource != true && adbInputController == null) {
                                 val host = huaweiSourceHost ?: "192.168.49.1"
-                                val controller = AdbInputController(this@AirPlayDisplayActivity, host)
-                                adbInputController = controller
-                                controller.connectAsync()
-                                Log.i(TAG, "Pre-connected ADB input controller for Huawei source $host on first frame")
+                                attachAdbController(host, adbPort, forceReconnect = true)
+                                Log.i(TAG, "Pre-connected ADB input controller for Huawei source $host:$adbPort on first frame")
                             }
                         }
                     }
                 },
                 onSourceHostDetected = { host ->
-                    if (huaweiSourceHost != host || adbInputController == null) {
-                        huaweiSourceHost = host
-                        adbInputController?.disconnect()
-                        val controller = AdbInputController(this, host)
-                        adbInputController = controller
-                        controller.connectAsync()
-                        Log.i(TAG, "ADB input controller created for Huawei source $host")
+                    if (miracastServer?.isWindowsSource != true && (huaweiSourceHost != host || adbInputController == null)) {
+                        attachAdbController(host, adbPort, forceReconnect = true)
+                        Log.i(TAG, "ADB input controller created for Huawei source $host:$adbPort")
                     }
                 }
             ).apply {
+                onUibcStateChanged = {
+                    runOnUiThread {
+                        updateReverseTouchUi()
+                    }
+                }
                 start()
             }
             Log.i(TAG, "MiracastServer started (WFD Sink)")
@@ -1143,6 +1219,7 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 runOnUiThread {
                     mWaitingOverlay.visibility = View.GONE
                     mTvAirPlayStatus.text = "已连接 Mac，正在接收画面..."
+                    updateReverseTouchUi()
                     scheduleAutoHideControls(3000L)
                 }
             }
@@ -1179,7 +1256,8 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 }
                 activeSource = DisplaySource.NONE
                 hasReceivedFrame = false
-                mWaitingOverlay.visibility = View.VISIBLE
+                updateWaitingOverlayVisibility()
+                updateReverseTouchUi()
                 mTvAirPlayStatus.text = "Mac 已断开连接，等待重新连接..."
                 miracastServer?.ensureDiscoverable()
                 mVideoPlayer?.reset()
@@ -1287,54 +1365,68 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private fun showRenameDialog() {
+        val dp = { v: Int -> com.n1tools.box.ui.glass.GlassUiHelper.dp(this, v) }
+        val descTv = TextView(this).apply {
+            text = "修改后，手机无线投屏、电脑屏幕镜像及系统投影中搜索到的副屏名称将同步更新。"
+            setTextColor(androidx.core.content.ContextCompat.getColor(this@AirPlayDisplayActivity, R.color.glass_text_secondary))
+            textSize = 13f
+            setLineSpacing(dp(3).toFloat(), 1.15f)
+            setPadding(0, 0, 0, dp(12))
+        }
+
         val input = EditText(this).apply {
             setText(displayDeviceName)
             setSelection(text.length)
-            setTextColor(android.graphics.Color.parseColor("#E2E8F0"))
-            setHintTextColor(android.graphics.Color.parseColor("#64748B"))
+            setTextColor(androidx.core.content.ContextCompat.getColor(this@AirPlayDisplayActivity, R.color.glass_text_primary))
+            setHintTextColor(androidx.core.content.ContextCompat.getColor(this@AirPlayDisplayActivity, R.color.glass_text_hint))
             hint = "请输入副屏名称 (如 Free Display)"
             setSingleLine(true)
-            textSize = 15f
+            textSize = 14.5f
+            setBackgroundResource(R.drawable.bg_glass_input)
+            setPadding(dp(14), dp(11), dp(14), dp(11))
         }
 
-        val container = FrameLayout(this).apply {
-            setPadding(50, 30, 50, 10)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(descTv)
             addView(input)
         }
 
-        android.app.AlertDialog.Builder(this)
-            .setTitle("重命名副屏设备")
-            .setMessage("修改后，手机无线投屏、电脑屏幕镜像及系统投影中搜索到的副屏名称将同步更新。")
-            .setView(container as View)
-            .setPositiveButton("保存", DialogInterface.OnClickListener { dialog, _ ->
-                val newName = input.text.toString().trim()
-                if (newName.isNotEmpty() && newName != displayDeviceName) {
-                    displayDeviceName = newName
-                    val prefs = getSharedPreferences("display_settings", Context.MODE_PRIVATE)
-                    prefs.edit().putString("free_display_name", displayDeviceName).apply()
-                    updateDeviceNameUi()
-        isCleanStandby = prefs.getBoolean("clean_standby_enabled", false)
-        updateCleanStandbyUi()
-                    miracastServer?.updateDeviceName(displayDeviceName)
+        showManagedDialog(
+            com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+                context = this,
+                title = "重命名副屏设备",
+                contentView = container,
+                positiveText = "保存",
+                onPositive = {
+                    val newName = input.text.toString().trim()
+                    if (newName.isNotEmpty() && newName != displayDeviceName) {
+                        displayDeviceName = newName
+                        val prefs = getSharedPreferences("display_settings", Context.MODE_PRIVATE)
+                        prefs.edit().putString("free_display_name", displayDeviceName).apply()
+                        updateDeviceNameUi()
+                        isCleanStandby = prefs.getBoolean("clean_standby_enabled", false)
+                        updateCleanStandbyUi()
+                        miracastServer?.updateDeviceName(displayDeviceName)
 
-                    thread(name = "RestartAirPlayWithName") {
-                        try {
-                            airPlayServer?.stop()
-                            val deviceId = getOrCreateAirPlayDeviceId()
-                            val bindAddress = getActiveWifiIpv4Address()
-                            airPlayServer = AirPlayServer(displayDeviceName, deviceId, bindAddress, 7100, 7000, airplayDataConsumer)
-                            airPlayServer?.start()
-                            Log.i(TAG, "AirPlay server re-registered with new name: $displayDeviceName")
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to restart AirPlay with new name", e)
+                        thread(name = "RestartAirPlayWithName") {
+                            try {
+                                airPlayServer?.stop()
+                                val deviceId = getOrCreateAirPlayDeviceId()
+                                val bindAddress = getActiveWifiIpv4Address()
+                                airPlayServer = AirPlayServer(displayDeviceName, deviceId, bindAddress, 7100, 7000, airplayDataConsumer)
+                                airPlayServer?.start()
+                                Log.i(TAG, "AirPlay server re-registered with new name: $displayDeviceName")
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to restart AirPlay with new name", e)
+                            }
                         }
+                        android.widget.Toast.makeText(this, "副屏设备名已更新为: $displayDeviceName", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                    android.widget.Toast.makeText(this, "副屏设备名已更新为: $displayDeviceName", android.widget.Toast.LENGTH_SHORT).show()
-                }
-                dialog.dismiss()
-            })
-            .setNegativeButton("取消", DialogInterface.OnClickListener { dialog, _ -> dialog.dismiss() })
-            .show()
+                },
+                negativeText = "取消"
+            )
+        )
     }
 
     private fun shareApk() {
@@ -1389,122 +1481,220 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private fun showAboutDialog() {
-        val message = StringBuilder().apply {
-            append("📅 【版本与发布】\n")
-            append("版本：v1.0.0 (Release)\n")
-            append("发布日期：2026年11月21日\n\n")
+        val dp = { v: Int -> com.n1tools.box.ui.glass.GlassUiHelper.dp(this, v) }
+        val isLandscape = com.n1tools.box.ui.glass.GlassUiHelper.isLandscape(this)
+        val primaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_primary)
+        val secondaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_secondary)
+        val cyanColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_cyan)
+        val orangeColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_orange)
 
-            append("💡 【产品定位与起源】\n")
-            append("Free Display 是一款通用、轻量级、低延迟的开源无线显示接收端软件。\n")
-            append("项目起源于对闲置 Android 设备硬件算力的深度挖掘，通过优化底层硬件解码管线、Wi-Fi Direct P2P 点对点传输与网络流媒体解包协议，将普通设备转变为专业级低延迟无线副屏。\n")
-            append("架构具备高度通用性，广泛兼容各类 Android 手机、平板及智能显示终端。\n\n")
+        fun buildGlassSectionCard(title: String, body: String, bottomMarginDp: Int = 10): LinearLayout {
+            return LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.bg_instruction_box)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp(bottomMarginDp)
+                }
 
-            append("📱 【核心功能】\n")
-            append("• 无线扩展屏与镜像：支持作为电脑的无线扩展显示器或镜像屏，最高支持 60fps 高帧率硬件直通低延迟解码。\n")
-            append("• 移动端无线投屏：兼容通用 Wi-Fi Display (WFD) 投屏标准，支持手机屏幕镜像与桌面模式大屏扩展。\n")
-            append("• 反向控制链路：内置 UIBC 触控通道与模拟输入接口，支持大屏端触摸反馈（依赖发射端系统能力）。\n")
-            append("• 多档画面缩放：提供「保持比例适应」、「拉伸全屏」与「原生点对点」三种画面填充策略。\n")
-            append("• 双通道高保真音频：支持在副屏端发声或保持发射源端发声之间无缝切换。\n\n")
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = title
+                    setTextColor(primaryColor)
+                    textSize = 13.5f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setPadding(0, 0, 0, dp(5))
+                })
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = body
+                    setTextColor(secondaryColor)
+                    textSize = 12.2f
+                    setLineSpacing(dp(3).toFloat(), 1.15f)
+                })
+            }
+        }
 
-            append("📖 【快速连接指南】\n")
-            append("1. 电脑端连接：系统控制中心 ➔ 屏幕镜像 / 投影 ➔ 搜索并连接「$displayDeviceName」。\n")
-            append("2. 移动端连接：系统控制中心 ➔ 无线投屏 / 多屏互动 ➔ 搜索并连接「$displayDeviceName」。\n")
-            append("3. 悬浮控制中心：轻触屏幕呼出操作栏，无操作 5 秒自动收起为小抽屉；屏幕放不下时支持左右平滑滑动。\n\n")
-
-            append("🤝 【鸣谢开源协议与组件】\n")
-            append("• Netty 异步高性能事件网络框架 (Apache 2.0)\n")
-            append("• JmDNS 多播 DNS 服务发现协议实现 (Apache 2.0)\n")
-            append("• AOSP 媒体编解码与图形管线架构 (Apache 2.0)\n\n")
-
-            append("⚖️ 【免责与合规声明】\n")
-            append("Free Display 为独立的第三方开源软件，遵循宽松开源许可证开发，与任何商业操作系统厂商或设备制造商品牌均无任何隶属、投资或商业背书关系。\n")
-            append("文中所述之技术术语及第三方名词仅用于实现技术互操作性与使用场景说明，其相应商标及合法权益均归各自权利人所有。")
-        }.toString()
-
-        val container = LinearLayout(this).apply {
+        val infoColumn = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(40, 25, 40, 25)
         }
 
-        val tv = TextView(this).apply {
-            text = message
-            setTextColor(android.graphics.Color.parseColor("#E2E8F0"))
-            textSize = 13f
-            setLineSpacing(6f, 1.15f)
+        val appVersionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "1.1.0"
+        } catch (_: Exception) {
+            "1.1.0"
         }
-        container.addView(tv)
 
-        // ☕ 赞赏与支持开发者区块（自愿赞赏方案 + 微信赞赏码）
+        // 1. 版本与产品定位卡
+        infoColumn.addView(
+            buildGlassSectionCard(
+                title = "📅 版本与产品定位 · v$appVersionName (2026-11-26)",
+                body = "Free Display 是一款通用、轻量级、低延迟的开源无线显示接收端软件。\n" +
+                    "通过深度优化硬件解码管线、Wi-Fi Direct P2P 直连与流媒体解包协议，将闲置 Android 手机、平板及显示终端转变为专业级无线副屏。"
+            )
+        )
+
+        // 2. 核心功能卡
+        infoColumn.addView(
+            buildGlassSectionCard(
+                title = "📱 核心功能",
+                body = "• 无线扩展与镜像：最高支持 60fps 硬件直通低延迟解码。\n" +
+                    "• 移动端与 Windows 投屏：兼容 Wi-Fi Display (Miracast) 与 AirPlay。\n" +
+                    "• 双向反向触控：支持 Android/鸿蒙 (ADB) 与 Windows 10/11 (UIBC) 触控与拖拽。\n" +
+                    "• 多档画面与音频：适应/拉伸/点对点缩放，副屏与发射端音频无缝切换。"
+            )
+        )
+
+        // 3. 快速连接指南卡
+        infoColumn.addView(
+            buildGlassSectionCard(
+                title = "📖 快速连接指南",
+                body = "1. 电脑端：控制中心 ➔ 屏幕镜像 / 投影 ➔ 连接「$displayDeviceName」。\n" +
+                    "2. 移动端：控制中心 ➔ 无线投屏 / 多屏互动 ➔ 连接「$displayDeviceName」。\n" +
+                    "3. 悬浮控制中心：轻触屏幕呼出，5 秒自动收起为顶部胶囊。"
+            )
+        )
+
+        // 4. 开源鸣谢与合规声明卡
+        infoColumn.addView(
+            buildGlassSectionCard(
+                title = "🤝 开源鸣谢与合规声明",
+                body = "• 核心组件：Netty、JmDNS、AOSP 媒体编解码与图形管线 (Apache 2.0)。\n" +
+                    "• 合规声明：独立第三方开源软件，与商业 OS 或硬件厂商无隶属或背书关系，文中技术名词权益归各自权利人所有。",
+                bottomMarginDp = if (isLandscape) 0 else 10
+            )
+        )
+
+        // 5. ☕ 赞赏与支持开发者卡（与所有卡片保持统一的玻璃边框与层次）
         val rewardCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_HORIZONTAL
-            setPadding(24, 20, 24, 20)
+            setBackgroundResource(R.drawable.bg_instruction_box)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 30
-                bottomMargin = 10
-            }
-            setBackgroundResource(R.drawable.bg_instruction_box)
+            )
         }
 
-        val tvRewardHeader = TextView(this).apply {
-            text = "☕ 【赞赏与支持作者】\nFree Display 为个人独立开源开发，坚持永久免费、无广告与纯净免打扰。\n若本工具切实解决了您的无线副屏需求，欢迎微信扫码自愿请作者喝杯咖啡！\n（赞赏纯属自愿无偿鼓励，不与任何功能权益捆绑，感谢您的支持与陪伴！）"
-            setTextColor(android.graphics.Color.parseColor("#E2E8F0"))
-            textSize = 12.5f
-            setLineSpacing(5f, 1.15f)
-            setPadding(0, 0, 0, 10)
-        }
-        rewardCard.addView(tvRewardHeader)
+        rewardCard.addView(TextView(this).apply {
+            text = "☕ 赞赏与支持作者"
+            setTextColor(primaryColor)
+            textSize = 13.5f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            gravity = android.view.Gravity.START
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(0, 0, 0, dp(6))
+        })
 
-        val tvGithubLink = TextView(this).apply {
-            text = "🌐 项目 GitHub 仓库：https://github.com/jimmycq/FreeDisplay"
-            setTextColor(android.graphics.Color.parseColor("#38BDF8"))
-            textSize = 12.5f
+        rewardCard.addView(TextView(this).apply {
+            text = "Free Display 坚持永久免费、无广告与纯净免打扰。\n若本工具解决了您的无线副屏需求，欢迎微信扫码自愿请作者喝杯咖啡（纯属自愿鼓励，不与任何功能捆绑）。"
+            setTextColor(secondaryColor)
+            textSize = 12f
+            setLineSpacing(dp(3).toFloat(), 1.15f)
+            setPadding(0, 0, 0, dp(8))
+        })
+
+        rewardCard.addView(TextView(this).apply {
+            text = "🌐 GitHub：github.com/jimmycq/FreeDisplay"
+            setTextColor(cyanColor)
+            textSize = 12.2f
             paint.isUnderlineText = true
-            setPadding(0, 0, 0, 16)
-            setOnClickListener {
-                openFeedbackUrl()
-            }
-        }
-        rewardCard.addView(tvGithubLink)
+            setPadding(0, 0, 0, dp(12))
+            setOnClickListener { openFeedbackUrl() }
+        })
 
-        val ivReward = ImageView(this).apply {
-            val qrSize = (220 * resources.displayMetrics.density).toInt()
+        rewardCard.addView(ImageView(this).apply {
+            val qrSize = dp(if (isLandscape) 172 else 200)
             layoutParams = LinearLayout.LayoutParams(qrSize, qrSize).apply {
                 gravity = android.view.Gravity.CENTER_HORIZONTAL
             }
             setImageResource(R.drawable.img_reward_qrcode)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setBackgroundColor(android.graphics.Color.WHITE)
-            setPadding(8, 8, 8, 8)
-        }
-        rewardCard.addView(ivReward)
+            setPadding(dp(6), dp(6), dp(6), dp(6))
+        })
 
-        val tvRewardFooter = TextView(this).apply {
+        rewardCard.addView(TextView(this).apply {
             text = "Jimmy 的微信赞赏码 · 感谢支持开源"
-            setTextColor(android.graphics.Color.parseColor("#EAB308"))
+            setTextColor(orangeColor)
             textSize = 12f
             gravity = android.view.Gravity.CENTER
-            setPadding(0, 12, 0, 4)
-        }
-        rewardCard.addView(tvRewardFooter)
+            setPadding(0, dp(10), 0, dp(2))
+        })
 
-        container.addView(rewardCard)
-
-        val scrollView = android.widget.ScrollView(this).apply {
-            addView(container)
-        }
-
-        android.app.AlertDialog.Builder(this)
-            .setTitle("关于 Free Display")
-            .setView(scrollView)
-            .setNeutralButton("🚀 检查更新") { _, _ ->
-                com.n1tools.box.update.UpdateChecker.check(this, manual = true)
+        // 根据横竖屏动态切换单栏/双栏布局
+        val contentView: View = if (isLandscape) {
+            val leftScroll = android.widget.ScrollView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.35f).apply {
+                    marginEnd = dp(12)
+                }
+                addView(infoColumn)
             }
-            .setPositiveButton("知道了") { d, _ -> d.dismiss() }
-            .show()
+            val rightScroll = android.widget.ScrollView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                addView(rewardCard)
+            }
+            LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.TOP
+                addView(leftScroll)
+                addView(rightScroll)
+            }
+        } else {
+            infoColumn.addView(rewardCard)
+            android.widget.ScrollView(this).apply {
+                addView(infoColumn)
+            }
+        }
+
+        aboutDialog?.dismiss()
+        val dialog = com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+            context = this,
+            title = "关于 Free Display",
+            contentView = contentView,
+            positiveText = "知道了",
+            neutralText = "🚀 检查更新",
+            onNeutral = {
+                com.n1tools.box.update.UpdateChecker.check(this, manual = true)
+            },
+            portraitMaxWidthDp = 460,
+            landscapeMaxWidthDp = 880
+        )
+        aboutDialog = dialog
+        showManagedDialog(dialog) {
+            if (aboutDialog === dialog) {
+                aboutDialog = null
+            }
+        }
+    }
+
+    private fun updateWaitingOverlayVisibility() {
+        if (!::mWaitingOverlay.isInitialized) return
+        val switchOverlayVisible = ::layoutSwitchDeviceOverlay.isInitialized &&
+            layoutSwitchDeviceOverlay.visibility == View.VISIBLE
+        val shouldShow = activeSource == DisplaySource.NONE &&
+            !isCleanStandby &&
+            activeDialogCount == 0 &&
+            !switchOverlayVisible
+        mWaitingOverlay.visibility = if (shouldShow) View.VISIBLE else View.GONE
+    }
+
+    private fun showManagedDialog(
+        dialog: android.app.AlertDialog,
+        onDismissExtra: (() -> Unit)? = null
+    ): android.app.AlertDialog {
+        activeDialogCount++
+        updateWaitingOverlayVisibility()
+        dialog.setOnDismissListener {
+            activeDialogCount = (activeDialogCount - 1).coerceAtLeast(0)
+            onDismissExtra?.invoke()
+            updateWaitingOverlayVisibility()
+        }
+        dialog.show()
+        return dialog
     }
 
 
@@ -1517,41 +1707,614 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
             mBtnCleanStandby.text = "🖼 纯净待机: 关"
             mBtnCleanStandby.setTextColor(android.graphics.Color.parseColor("#ffffff"))
         }
-        if (::mWaitingOverlay.isInitialized && activeSource == DisplaySource.NONE) {
-            mWaitingOverlay.visibility = if (isCleanStandby) View.GONE else View.VISIBLE
+        updateWaitingOverlayVisibility()
+    }
+
+    private fun attachAdbController(
+        host: String,
+        port: Int = adbPort,
+        forceReconnect: Boolean = true
+    ): AdbInputController {
+        huaweiSourceHost = host
+        adbPort = port
+        val existing = adbInputController
+        if (existing != null && existing.getTargetAddress() == "$host:$port") {
+            if (forceReconnect) {
+                existing.ensureConnectedAsync(force = true)
+            }
+            return existing
         }
+        existing?.disconnect()
+        val controller = AdbInputController(this, host, port).apply {
+            onStateChanged = {
+                updateReverseTouchUi()
+            }
+        }
+        adbInputController = controller
+        updateReverseTouchUi()
+        controller.ensureConnectedAsync(force = true)
+        return controller
+    }
+
+    private fun onReverseTouchButtonClick() {
+        when (activeSource) {
+            DisplaySource.NONE -> {
+                android.widget.Toast.makeText(
+                    this,
+                    "尚未连接投屏，请先使用安卓设备投屏后再启用反向触控",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            DisplaySource.MAC -> {
+                android.widget.Toast.makeText(
+                    this,
+                    "当前为 AirPlay 投屏（Mac / iOS），暂不支持反向触控；仅支持安卓或 Windows 无线投屏",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            DisplaySource.HUAWEI -> {
+                if (miracastServer?.isWindowsSource == true) {
+                    showWindowsReverseTouchDialog()
+                } else {
+                    showReverseTouchDialog()
+                }
+            }
+        }
+    }
+
+    private fun updateReverseTouchUi() {
+        if (!::mBtnReverseTouch.isInitialized) return
+        val ctrl = adbInputController
+        val isMiracast = (activeSource == DisplaySource.HUAWEI)
+        val isWindows = isMiracast && (miracastServer?.isWindowsSource == true)
+        mBtnReverseTouch.alpha = if (isMiracast) 1.0f else 0.5f
+        if (::mBtnTouchSettings.isInitialized) {
+            mBtnTouchSettings.alpha = if (isMiracast) 1.0f else 0.5f
+        }
+        when {
+            activeSource == DisplaySource.NONE -> {
+                mBtnReverseTouch.text = "🖱 触控: 未投屏"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
+            }
+            activeSource == DisplaySource.MAC -> {
+                mBtnReverseTouch.text = "🖱 触控: 不可用"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
+            }
+            isWindows -> {
+                if (miracastServer?.isUibcConnected == true) {
+                    mBtnReverseTouch.text = "🖱 触控: Win已就绪"
+                    mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#30D158"))
+                } else {
+                    mBtnReverseTouch.text = "🖱 触控: Win未开启"
+                    mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF9F0A"))
+                }
+            }
+            ctrl == null -> {
+                mBtnReverseTouch.text = "🖱 触控: 未连接"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#B8C4D6"))
+            }
+            ctrl.connectionState == AdbInputController.ConnectionState.CONNECTED -> {
+                mBtnReverseTouch.text = "🖱 触控: 已就绪"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#30D158"))
+            }
+            ctrl.connectionState == AdbInputController.ConnectionState.CONNECTING -> {
+                mBtnReverseTouch.text = "🖱 触控: 连接中"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF9F0A"))
+            }
+            else -> {
+                mBtnReverseTouch.text = "🖱 触控: 未连接"
+                mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF6961"))
+            }
+        }
+    }
+
+    private fun showReverseTouchDialog() {
+        val dp = { v: Int -> com.n1tools.box.ui.glass.GlassUiHelper.dp(this, v) }
+        val primaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_primary)
+        val secondaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_secondary)
+        val cyanColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_cyan)
+        val orangeColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_orange)
+
+        val currentHost = huaweiSourceHost ?: "192.168.49.1"
+        val ctrl = adbInputController
+        val stateLabel = when (ctrl?.connectionState) {
+            AdbInputController.ConnectionState.CONNECTED -> "✅ 已连接 (${ctrl.getTargetAddress()})"
+            AdbInputController.ConnectionState.CONNECTING -> "⏳ 正在连接 (${ctrl.getTargetAddress()})..."
+            AdbInputController.ConnectionState.UNAUTHORIZED -> "⚠️ 等待手机授权 RSA 调试弹窗"
+            AdbInputController.ConnectionState.REFUSED -> "❌ 手机端口 $adbPort 未开启"
+            AdbInputController.ConnectionState.FAILED -> "❌ 连接超时 (${ctrl.getTargetAddress()})"
+            else -> if (activeSource == DisplaySource.HUAWEI) "⚪ 尚未连接 ($currentHost:$adbPort)" else "⚪ 当前未处于无线投屏会话"
+        }
+
+        // 1. 顶部苹果风格分段切换栏（同一弹窗内动态切换「连接与端口」与「开启向导」）
+        val tabBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundResource(R.drawable.bg_glass_input)
+            setPadding(dp(4), dp(4), dp(4), dp(4))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
+        }
+
+        val tabConnect = TextView(this).apply {
+            text = "🔗 连接与端口"
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, dp(8), 0, dp(8))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val tabGuide = TextView(this).apply {
+            text = "📖 开启向导"
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, dp(8), 0, dp(8))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        tabBar.addView(tabConnect)
+        tabBar.addView(tabGuide)
+
+        // 2. 动态内容容器（单弹窗内动态切换内容，不嵌套新弹窗）
+        val dynamicContentHost = android.widget.ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // --- 视图 A：连接与端口 ---
+        val detailMsg = buildString {
+            append("目标手机地址：$currentHost:$adbPort\n")
+            append("当前状态：$stateLabel\n")
+            if (!ctrl?.lastErrorMessage.isNullOrBlank()) {
+                append("诊断信息：${ctrl?.lastErrorMessage}\n")
+            }
+            if (ctrl != null && ctrl.isReady) {
+                append("投屏分辨率：${ctrl.sourceWidth}×${ctrl.sourceHeight} (displayId=${ctrl.sourceDisplayId})")
+            } else {
+                append("\n提示：若手机已开启调试但端口不是 5555，可在下方修改端口后点击「重新发起连接」。")
+            }
+        }
+
+        val infoCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_instruction_box)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
+            addView(TextView(this@AirPlayDisplayActivity).apply {
+                text = detailMsg
+                setTextColor(secondaryColor)
+                textSize = 12.5f
+                setLineSpacing(dp(3).toFloat(), 1.15f)
+            })
+        }
+
+        val portLabel = TextView(this).apply {
+            text = "目标手机 ADB 端口（默认 5555）："
+            setTextColor(primaryColor)
+            textSize = 12.5f
+            setPadding(0, 0, 0, dp(6))
+        }
+
+        val etPort = EditText(this).apply {
+            setText(adbPort.toString())
+            setSelection(text.length)
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            setTextColor(primaryColor)
+            setHintTextColor(cyanColor)
+            hint = "5555"
+            textSize = 14f
+            setSingleLine(true)
+            setBackgroundResource(R.drawable.bg_glass_input)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+        }
+
+        val btnSwitchToGuide = TextView(this).apply {
+            text = "📖 不会开启手机调试？点此切换到「开启向导」 ➔"
+            setTextColor(cyanColor)
+            textSize = 12.5f
+            gravity = android.view.Gravity.CENTER
+            setBackgroundResource(R.drawable.bg_glass_pill)
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(12)
+            }
+            com.n1tools.box.ui.glass.GlassUiHelper.applyPressEffect(this)
+        }
+
+        val connectView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(infoCard)
+            addView(portLabel)
+            addView(etPort)
+            addView(btnSwitchToGuide)
+        }
+
+        // --- 视图 B：按当前设备 Android 版本动态生成的开启向导 ---
+        fun buildGuideCard(title: String, body: String, bottomMarginDp: Int = 10): LinearLayout {
+            return LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.bg_instruction_box)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp(bottomMarginDp)
+                }
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = title
+                    setTextColor(primaryColor)
+                    textSize = 13.5f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setPadding(0, 0, 0, dp(4))
+                })
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = body
+                    setTextColor(secondaryColor)
+                    textSize = 12.2f
+                    setLineSpacing(dp(3).toFloat(), 1.15f)
+                })
+            }
+        }
+
+        fun buildDynamicGuideView(): LinearLayout {
+            val sdkInt = android.os.Build.VERSION.SDK_INT
+            val androidVer = android.os.Build.VERSION.RELEASE ?: "未知"
+            val manufacturer = (android.os.Build.MANUFACTURER ?: "").trim()
+            val model = (android.os.Build.MODEL ?: "").trim()
+            val isHarmonyOrHuawei = manufacturer.equals("HUAWEI", ignoreCase = true) ||
+                manufacturer.equals("HONOR", ignoreCase = true)
+            val isXiaomi = manufacturer.equals("Xiaomi", ignoreCase = true) ||
+                manufacturer.equals("Redmi", ignoreCase = true)
+
+            val envAdvice = if (sdkInt < android.os.Build.VERSION_CODES.R) {
+                "当前副屏接收端：$manufacturer $model · Android $androidVer (API $sdkInt)\n" +
+                    "• 兼容性说明：当前接收端系统低于 Android 11，内置 ADB 不支持「6位配对码」无线配对。\n" +
+                    "• 推荐方案：被控手机需先开启「USB 调试」并执行一次 adb tcpip 5555（若为华为/鸿蒙，还须打开「仅充电模式下允许 ADB 调试」）。"
+            } else {
+                "当前副屏接收端：$manufacturer $model · Android $androidVer (API $sdkInt)\n" +
+                    "• 兼容性说明：当前接收端为 Android 11+，系统支持现代无线调试环境。\n" +
+                    "• 推荐方案：若被控手机尚未与本平板完成无线配对，仍建议先执行一次 adb tcpip 5555 固定端口，或确保已授权后再填入随机端口。"
+            }
+
+            val step1Body = when {
+                isHarmonyOrHuawei ->
+                    "• 华为 / 鸿蒙（HarmonyOS 4.2 等）：设置 ➔ 关于手机 ➔ 连续点击「HarmonyOS 版本」7 次（输入锁屏密码即可）。\n" +
+                        "• 其他机型：小米连点「OS/MIUI 版本」7 次；原生/OPPO/vivo 连点「版本号」7 次。"
+                isXiaomi ->
+                    "• 小米 / 澎湃 OS：设置 ➔ 我的设备 ➔ 全部参数与信息 ➔ 连续点击「OS / MIUI 版本」7 次。\n" +
+                        "• 华为 / 鸿蒙 4.2：设置 ➔ 关于手机 ➔ 连续点击「HarmonyOS 版本」7 次。"
+                else ->
+                    "• 华为 / 鸿蒙 4.2：设置 ➔ 关于手机 ➔ 连续点击「HarmonyOS 版本」7 次。\n" +
+                        "• 小米 / 澎湃 OS：设置 ➔ 我的设备 ➔ 全部参数与信息 ➔ 连点「OS/MIUI 版本」7 次。\n" +
+                        "• 原生 / OPPO / vivo：设置 ➔ 关于手机 ➔ 连续点击「版本号」7 次。"
+            }
+
+            val step2Body = if (sdkInt >= android.os.Build.VERSION_CODES.R) {
+                "进入「设置 ➔ 系统和更新 ➔ 开发人员选项」（部分机型在「更多设置」）：\n" +
+                    "• 打开「USB 调试」与「无线调试」（可在无线调试内查看当前动态端口）。\n" +
+                    "• 若被控手机为华为/鸿蒙，务必同时打开「“仅充电”模式下允许 ADB 调试」。"
+            } else {
+                "在被控手机进入「设置 ➔ 系统和更新 ➔ 开发人员选项」：\n" +
+                    "• 打开「USB 调试」。\n" +
+                    "• 若被控手机为华为/鸿蒙 4.2，务必同时打开「“仅充电”模式下允许 ADB 调试」（否则会被系统拦截）。"
+            }
+
+            return LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(buildGuideCard("📱 当前设备检测与适配建议", envAdvice))
+                addView(buildGuideCard("1️⃣ 第一步：开启「开发者模式」", step1Body))
+                addView(buildGuideCard("2️⃣ 第二步：开启调试开关", step2Body))
+                addView(
+                    buildGuideCard(
+                        "3️⃣ 第三步：开启 5555 端口与授权确认",
+                        "• 用数据线将手机连一次电脑，执行：adb tcpip 5555，提示 restarting in TCP mode 后即可拔线。\n" +
+                            "• 有效期：手机不重启就一直有效（切换 Wi-Fi/热点不影响），重启后需重设。\n" +
+                            "• 回到本弹窗点「🔄 重新发起连接」，在手机弹窗勾选「始终允许」并确定。",
+                        bottomMarginDp = 4
+                    )
+                )
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = "💡 提示：切换到上方「🔗 连接与端口」可随时修改端口号并立即重连。"
+                    setTextColor(orangeColor)
+                    textSize = 11.8f
+                    setPadding(dp(2), dp(6), dp(2), 0)
+                })
+            }
+        }
+
+        var guideViewCache: LinearLayout? = null
+        fun selectTab(showGuide: Boolean) {
+            if (showGuide) {
+                tabGuide.setBackgroundResource(R.drawable.bg_glass_pill_accent)
+                tabGuide.setTextColor(android.graphics.Color.WHITE)
+                tabGuide.setTypeface(tabGuide.typeface, android.graphics.Typeface.BOLD)
+                tabConnect.background = null
+                tabConnect.setTextColor(secondaryColor)
+                tabConnect.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+                if (guideViewCache == null) {
+                    guideViewCache = buildDynamicGuideView()
+                }
+                dynamicContentHost.removeAllViews()
+                dynamicContentHost.addView(guideViewCache)
+                dynamicContentHost.scrollTo(0, 0)
+            } else {
+                tabConnect.setBackgroundResource(R.drawable.bg_glass_pill_accent)
+                tabConnect.setTextColor(android.graphics.Color.WHITE)
+                tabConnect.setTypeface(tabConnect.typeface, android.graphics.Typeface.BOLD)
+                tabGuide.background = null
+                tabGuide.setTextColor(secondaryColor)
+                tabGuide.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+                dynamicContentHost.removeAllViews()
+                dynamicContentHost.addView(connectView)
+                dynamicContentHost.scrollTo(0, 0)
+            }
+        }
+
+        tabConnect.setOnClickListener { selectTab(false) }
+        tabGuide.setOnClickListener { selectTab(true) }
+        btnSwitchToGuide.setOnClickListener { selectTab(true) }
+        selectTab(false)
+
+        val rootContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(tabBar)
+            addView(dynamicContentHost)
+        }
+
+        showManagedDialog(
+            com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+                context = this,
+                title = "🖱 副屏反向触控 (ADB)",
+                contentView = rootContainer,
+                positiveText = "🔄 重新发起连接",
+                onPositive = {
+                    val parsedPort = etPort.text.toString().trim().toIntOrNull()?.takeIf { it in 1..65535 } ?: 5555
+                    attachAdbController(currentHost, parsedPort, forceReconnect = true)
+                    android.widget.Toast.makeText(this, "正在向 $currentHost:$parsedPort 发起连接申请...", android.widget.Toast.LENGTH_SHORT).show()
+                },
+                neutralText = if (ctrl?.isReady == true) "📐 刷新坐标" else null,
+                onNeutral = if (ctrl?.isReady == true) {
+                    {
+                        ctrl.refreshSourceDisplayConfigAsync()
+                        android.widget.Toast.makeText(this, "已刷新手机虚拟屏坐标", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } else null,
+                negativeText = "关闭",
+                portraitMaxWidthDp = 460,
+                landscapeMaxWidthDp = 660
+            )
+        )
+    }
+
+    private fun showWindowsReverseTouchDialog() {
+        val dp = { v: Int -> com.n1tools.box.ui.glass.GlassUiHelper.dp(this, v) }
+        val primaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_primary)
+        val secondaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_text_secondary)
+        val cyanColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_cyan)
+        val orangeColor = androidx.core.content.ContextCompat.getColor(this, R.color.glass_apple_orange)
+
+        val uibcConnected = miracastServer?.isUibcConnected == true
+        val statusText = if (uibcConnected) {
+            "✅ UIBC 反向触控已连接（支持点击与拖拽滑动）"
+        } else {
+            "⚠️ UIBC 通道尚未建立（请在 Windows 端勾选允许输入）"
+        }
+
+        val tabBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundResource(R.drawable.bg_glass_input)
+            setPadding(dp(4), dp(4), dp(4), dp(4))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
+        }
+        val tabStatus = TextView(this).apply {
+            text = "🔗 连接状态"
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, dp(8), 0, dp(8))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val tabGuide = TextView(this).apply {
+            text = "📖 Windows 开启向导"
+            textSize = 13f
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, dp(8), 0, dp(8))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        tabBar.addView(tabStatus)
+        tabBar.addView(tabGuide)
+
+        val dynamicHost = android.widget.ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        fun buildWinCard(title: String, body: String, bottomMarginDp: Int = 10): LinearLayout {
+            return LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundResource(R.drawable.bg_instruction_box)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp(bottomMarginDp)
+                }
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = title
+                    setTextColor(primaryColor)
+                    textSize = 13.5f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setPadding(0, 0, 0, dp(4))
+                })
+                addView(TextView(this@AirPlayDisplayActivity).apply {
+                    text = body
+                    setTextColor(secondaryColor)
+                    textSize = 12.2f
+                    setLineSpacing(dp(3).toFloat(), 1.15f)
+                })
+            }
+        }
+
+        val btnSwitchToGuide = TextView(this).apply {
+            text = "📖 不知道如何在 Windows 开启？点击查看设置向导 ➔"
+            setTextColor(cyanColor)
+            textSize = 12.5f
+            gravity = android.view.Gravity.CENTER
+            setBackgroundResource(R.drawable.bg_glass_pill)
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            com.n1tools.box.ui.glass.GlassUiHelper.applyPressEffect(this)
+        }
+
+        val statusView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(
+                buildWinCard(
+                    title = "💻 Windows 无线副屏触控 (Miracast UIBC)",
+                    body = "当前投屏源：$huaweiDeviceName (${huaweiSourceHost ?: "192.168.49.1"})\n" +
+                        "触控状态：$statusText\n\n" +
+                        "说明：Windows 10/11 原生通过 Wi-Fi Display UIBC 协议回传触摸坐标，无需安装驱动也无需开启 ADB。"
+                )
+            )
+            addView(btnSwitchToGuide)
+        }
+
+        val guideView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(
+                buildWinCard(
+                    title = "1️⃣ 第一步：电脑端发起无线投屏",
+                    body = "在 Windows 10 / 11 电脑上按快捷键「Win + K」打开无线投放面板，选择「$displayDeviceName」完成连接。"
+                )
+            )
+            addView(
+                buildWinCard(
+                    title = "2️⃣ 第二步：勾选「允许反向输入」（关键）",
+                    body = "连接成功后，Windows 屏幕顶部会弹出黑色连接状态栏（或再次按 Win + K 展开已连接设备）：\n" +
+                        "• 找到并勾选「允许来自此设备的鼠标、键盘、触摸和笔输入」。\n" +
+                        "• 勾选后，Windows 会立即下发 UIBC 端口并与本平板建立触控通道。"
+                )
+            )
+            addView(
+                buildWinCard(
+                    title = "3️⃣ 第三步：多屏模式与手势说明",
+                    body = "• 可按「Win + P」切换「扩展」或「复制」模式，扩展模式下平板可作为独立触控副屏。\n" +
+                        "• 支持单指点击、长按拖动窗口与滑动页面；若勾选后仍未生效，请点击下方「🔄 重新协商 UIBC」。",
+                    bottomMarginDp = 4
+                )
+            )
+            addView(TextView(this@AirPlayDisplayActivity).apply {
+                text = "💡 提示：部分公司受控电脑可能通过组策略禁用了 Miracast 输入回传，个人版/专业版默认均支持。"
+                setTextColor(orangeColor)
+                textSize = 11.8f
+                setPadding(dp(2), dp(6), dp(2), 0)
+            })
+        }
+
+        fun selectTab(showGuide: Boolean) {
+            if (showGuide) {
+                tabGuide.setBackgroundResource(R.drawable.bg_glass_pill_accent)
+                tabGuide.setTextColor(android.graphics.Color.WHITE)
+                tabGuide.setTypeface(tabGuide.typeface, android.graphics.Typeface.BOLD)
+                tabStatus.background = null
+                tabStatus.setTextColor(secondaryColor)
+                tabStatus.setTypeface(null, android.graphics.Typeface.NORMAL)
+                dynamicHost.removeAllViews()
+                dynamicHost.addView(guideView)
+            } else {
+                tabStatus.setBackgroundResource(R.drawable.bg_glass_pill_accent)
+                tabStatus.setTextColor(android.graphics.Color.WHITE)
+                tabStatus.setTypeface(tabStatus.typeface, android.graphics.Typeface.BOLD)
+                tabGuide.background = null
+                tabGuide.setTextColor(secondaryColor)
+                tabGuide.setTypeface(null, android.graphics.Typeface.NORMAL)
+                dynamicHost.removeAllViews()
+                dynamicHost.addView(statusView)
+            }
+            dynamicHost.scrollTo(0, 0)
+        }
+
+        tabStatus.setOnClickListener { selectTab(false) }
+        tabGuide.setOnClickListener { selectTab(true) }
+        btnSwitchToGuide.setOnClickListener { selectTab(true) }
+        selectTab(false)
+
+        val rootContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(tabBar)
+            addView(dynamicHost)
+        }
+
+        showManagedDialog(
+            com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+                context = this,
+                title = "🖱 Windows 反向触控 (UIBC)",
+                contentView = rootContainer,
+                positiveText = "🔄 重新协商 UIBC",
+                onPositive = {
+                    miracastServer?.reconnectUibc()
+                    android.widget.Toast.makeText(this, "已向 Windows 发送 UIBC 重新协商请求", android.widget.Toast.LENGTH_SHORT).show()
+                },
+                negativeText = "关闭",
+                portraitMaxWidthDp = 460,
+                landscapeMaxWidthDp = 660
+            )
+        )
     }
 
     private fun showHotspotGuideDialog() {
         val currentInfo = getNetworkInfoString()
-        android.app.AlertDialog.Builder(this)
-            .setTitle("🔥 2.4GHz 快速热点直连模式")
-            .setMessage("在没有 Wi-Fi 路由器或户外环境下，可将本平板开启为独立便携式热点，电脑或手机连接热点后可实现超低延迟无线副屏。\n\n当前网络状态：\n$currentInfo\n\n• 点击下方「打开热点设置」可一键进入系统网络共享页面开启热点与查看密码。")
-            .setPositiveButton("打开热点设置") { _, _ ->
-                try {
-                    val intent = Intent("android.settings.TETHER_SETTINGS").apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                } catch (e: Exception) {
+        showManagedDialog(
+            com.n1tools.box.ui.glass.GlassUiHelper.createGlassMessageDialog(
+                context = this,
+                title = "🔥 2.4GHz 快速热点直连模式",
+                message = "在没有 Wi-Fi 路由器或户外环境下，可将本平板开启为独立便携式热点，电脑或手机连接热点后可实现超低延迟无线副屏。\n\n当前网络状态：\n$currentInfo\n\n• 点击下方「打开热点设置」可一键进入系统网络共享页面开启热点与查看密码。",
+                positiveText = "打开热点设置",
+                onPositive = {
                     try {
-                        val intent = Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS).apply {
+                        val intent = Intent("android.settings.TETHER_SETTINGS").apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         startActivity(intent)
-                    } catch (e2: Exception) {
-                        android.widget.Toast.makeText(this, "请在系统设置中手动开启便携式热点", android.widget.Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        try {
+                            val intent = Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                        } catch (e2: Exception) {
+                            android.widget.Toast.makeText(this, "请在系统设置中手动开启便携式热点", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-            }
-            .setNeutralButton("刷新网络信息") { _, _ ->
-                if (::mTvNetworkInfo.isInitialized) {
-                    mTvNetworkInfo.text = getNetworkInfoString()
-                }
-                android.widget.Toast.makeText(this, "网络信息已刷新", android.widget.Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("知道了", null)
-            .show()
+                },
+                neutralText = "刷新网络信息",
+                onNeutral = {
+                    if (::mTvNetworkInfo.isInitialized) {
+                        mTvNetworkInfo.text = getNetworkInfoString()
+                    }
+                    android.widget.Toast.makeText(this, "网络信息已刷新", android.widget.Toast.LENGTH_SHORT).show()
+                },
+                negativeText = "知道了"
+            )
+        )
     }
 
     private fun openFeedbackUrl() {
@@ -1596,6 +2359,7 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 layoutSwitchDeviceOverlay.visibility = View.GONE
                 isSwitchOverlayShowing = false
                 lastSwitchDecisionTimeMs = System.currentTimeMillis()
+                updateWaitingOverlayVisibility()
                 switchOverlayGeneration++
             }
 
@@ -1694,15 +2458,14 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
                     // 切换至华为设备时，立即重新建立 ADB 输入控制器连接
                     if (adbInputController == null) {
                         val host = huaweiSourceHost ?: "192.168.49.1"
-                        val controller = AdbInputController(this, host)
-                        adbInputController = controller
-                        controller.connectAsync()
-                        Log.i(TAG, "Reconnected ADB input controller for Huawei source $host on user switch")
+                        attachAdbController(host, adbPort, forceReconnect = true)
+                        Log.i(TAG, "Reconnected ADB input controller for Huawei source $host:$adbPort on user switch")
                     }
                     android.widget.Toast.makeText(this, "已切换至 $huaweiDeviceName，并断开旧投屏", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
             layoutSwitchDeviceOverlay.visibility = View.VISIBLE
+            updateWaitingOverlayVisibility()
         }
     }
 

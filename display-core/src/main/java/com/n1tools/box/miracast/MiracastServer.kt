@@ -74,18 +74,29 @@ class MiracastServer(
         }.apply {
             onUibcRequested = { sourceHost, uibcPort, isHidc ->
                 onSourceHostDetected?.invoke(sourceHost)
-                if (uibcClient?.isConnected == true && uibcClient?.matches(sourceHost, uibcPort, isHidc) == true) {
+                val winSource = rtspServer?.isWindowsSource == true
+                if (uibcClient?.isConnected == true && uibcClient?.matches(sourceHost, uibcPort, isHidc, winSource) == true) {
                     Log.i(TAG, "UIBC client is already active and connected to $sourceHost:$uibcPort")
                 } else {
-                    Log.i(TAG, "Starting UIBC client connection to $sourceHost:$uibcPort (isHidc=$isHidc)")
+                    Log.i(TAG, "Starting UIBC client connection to $sourceHost:$uibcPort (isHidc=$isHidc, win=$winSource)")
                     val oldClient = uibcClient
                     oldClient?.stopClient()
                     try {
                         oldClient?.join(500)
                     } catch (ignored: InterruptedException) {}
-                    uibcClient = com.n1tools.box.miracast.uibc.UibcClient(sourceHost, uibcPort, isHidc).apply {
+                    uibcClient = com.n1tools.box.miracast.uibc.UibcClient(
+                        host = sourceHost,
+                        port = uibcPort,
+                        isHidc = isHidc,
+                        useSingleTouch = winSource,
+                        allowMove = winSource
+                    ).apply {
+                        onConnectionReady = {
+                            onUibcStateChanged?.invoke()
+                        }
                         onConnectionLost = {
                             Log.i(TAG, "UIBC connection lost, asking Source to re-enable UIBC port")
+                            onUibcStateChanged?.invoke()
                             rtspServer?.resendUibcSetting()
                         }
                         start()
@@ -174,6 +185,18 @@ class MiracastServer(
         tsReceiver?.suspend(suppressMs.coerceAtLeast(0L))
         rtspServer?.triggerTeardown()
         p2pManager?.disconnectGroup()
+    }
+
+    var onUibcStateChanged: (() -> Unit)? = null
+
+    val isWindowsSource: Boolean
+        get() = rtspServer?.isWindowsSource == true
+
+    val isUibcConnected: Boolean
+        get() = uibcClient?.isConnected == true
+
+    fun reconnectUibc() {
+        rtspServer?.resendUibcSetting()
     }
 
     fun ensureDiscoverable() {

@@ -35,17 +35,29 @@ object UibcExperiment {
 class UibcClient(
     val host: String,
     val port: Int,
-    val isHidc: Boolean = true
+    val isHidc: Boolean = true,
+    val useSingleTouch: Boolean = false,
+    val allowMove: Boolean = false
 ) : Thread("UibcClientThread") {
 
     val isConnected: Boolean
         get() = isRunning && socket?.isConnected == true && socket?.isClosed == false
 
-    /** Called when Huawei closes the UIBC socket, so the sink can re-enable UIBC over RTSP. */
+    /** Called when Source closes the UIBC socket, so the sink can re-enable UIBC over RTSP. */
     var onConnectionLost: (() -> Unit)? = null
+    var onConnectionReady: (() -> Unit)? = null
+    private var lastGenericMoveMs: Long = 0L
 
-    fun matches(targetHost: String, targetPort: Int, targetIsHidc: Boolean): Boolean {
-        return host == targetHost && port == targetPort && isHidc == targetIsHidc
+    fun matches(
+        targetHost: String,
+        targetPort: Int,
+        targetIsHidc: Boolean,
+        targetUseSingleTouch: Boolean = false
+    ): Boolean {
+        return host == targetHost &&
+            port == targetPort &&
+            isHidc == targetIsHidc &&
+            useSingleTouch == targetUseSingleTouch
     }
 
     companion object {
@@ -158,9 +170,15 @@ class UibcClient(
             return
         }
         if (!isHidc) {
-            // Huawei resets the UIBC channel when a GENERIC MOUSE_MOVE arrives between
-            // DOWN and UP. Keep tap-only mode for now; dragging can be added separately.
-            if (action == MotionEvent.ACTION_MOVE) return
+            if (action == MotionEvent.ACTION_MOVE) {
+                if (!allowMove) {
+                    // Huawei resets the UIBC channel when a GENERIC MOUSE_MOVE arrives between DOWN and UP.
+                    return
+                }
+                val now = System.currentTimeMillis()
+                if (now - lastGenericMoveMs < 16L) return
+                lastGenericMoveMs = now
+            }
             val vW = viewWidth.coerceAtLeast(1)
             val vH = viewHeight.coerceAtLeast(1)
             val cW = if (contentWidth > 0) contentWidth else vW
@@ -429,7 +447,7 @@ class UibcClient(
     }
 
     private fun buildGenericTouchPacket(action: Int, xNorm: Int, yNorm: Int): ByteArray? {
-        if (UibcExperiment.GENERIC_MOUSE) {
+        if (!useSingleTouch && UibcExperiment.GENERIC_MOUSE) {
             // WFD Generic Mouse: no pointer count/id; body = buttons + X(2) + Y(2).
             val typeId: Byte = when (action) {
                 MotionEvent.ACTION_DOWN -> MOUSE_DOWN
@@ -497,7 +515,8 @@ class UibcClient(
                 socket = s
                 val out = s.getOutputStream()
                 outStream = out
-                Log.i(TAG, "UIBC TCP connected successfully to $host:$port (mode=${if (isHidc) "HIDC" else "GENERIC"})")
+                Log.i(TAG, "UIBC TCP connected successfully to $host:$port (mode=${if (isHidc) "HIDC" else if (useSingleTouch) "GENERIC_TOUCH" else "GENERIC"})")
+                onConnectionReady?.invoke()
 
                 // Reset retry backoff on successful connection
                 retryDelayMs = 1500L

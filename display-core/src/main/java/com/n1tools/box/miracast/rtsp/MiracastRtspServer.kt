@@ -59,6 +59,9 @@ class MiracastRtspServer(
     // 未明确协商时优先 GENERIC：Android/华为电脑模式走触摸注入；仅源端只支持 HIDC 时才用鼠标 HID
     @Volatile
     private var pendingUibcIsHidc: Boolean = false
+    @Volatile
+    var isWindowsSource: Boolean = false
+        private set
 
     var onUibcRequested: ((sourceHost: String, uibcPort: Int, isHidc: Boolean) -> Unit)? = null
 
@@ -193,6 +196,7 @@ class MiracastRtspServer(
                     val hasOtherClient = activeClients.any { it !== socket && it.isConnected && !it.isClosed }
                     if (!hasOtherClient) {
                         isStreamingActive = false
+                        isWindowsSource = false
                         onStreamStateChanged(false)
                     }
                 }
@@ -211,6 +215,10 @@ class MiracastRtspServer(
         headers: Map<String, String>,
         body: String
     ) {
+        val ua = headers["user-agent"] ?: ""
+        if (ua.contains("Windows", ignoreCase = true) || ua.contains("Microsoft", ignoreCase = true)) {
+            isWindowsSource = true
+        }
         when (method) {
             "OPTIONS" -> {
                 // WFD M1: Source -> Sink. Sink replies 200 OK.
@@ -305,10 +313,17 @@ class MiracastRtspServer(
                                 ?.split(',', ';')
                                 ?.map { it.trim().uppercase() }
                                 ?: emptyList()
-                            // 默认严格按 input_category_list 选择；FORCE_GENERIC 为兼容性实验开关
-                            pendingUibcIsHidc = !UibcExperiment.FORCE_GENERIC &&
-                                categories.contains("HIDC") && !categories.contains("GENERIC")
-                            Log.i(TAG, "Source negotiated UIBC port: $uPort, categories=$categories, isHidc=$pendingUibcIsHidc")
+                            if (body.contains("SingleTouch", ignoreCase = true)) {
+                                isWindowsSource = true
+                            }
+                            // 默认严格按 input_category_list 选择；Windows 优先走 GENERIC SingleTouch
+                            pendingUibcIsHidc = if (isWindowsSource && categories.contains("GENERIC")) {
+                                false
+                            } else {
+                                !UibcExperiment.FORCE_GENERIC &&
+                                    categories.contains("HIDC") && !categories.contains("GENERIC")
+                            }
+                            Log.i(TAG, "Source negotiated UIBC port: $uPort, categories=$categories, isHidc=$pendingUibcIsHidc, isWindows=$isWindowsSource")
                         }
                     }
                 }
@@ -400,6 +415,9 @@ class MiracastRtspServer(
                 Log.i(TAG, "Replied PLAY 200 OK (CSeq: $reqCSeq) - Video streaming starting!")
                 isStreamingActive = true
                 onStreamStateChanged(true)
+                if (pendingUibcPort > 0 && !uibcLaunchInProgress && !uibcEnableConfirmed) {
+                    triggerPendingUibc(out)
+                }
             }
 
             "PAUSE" -> {

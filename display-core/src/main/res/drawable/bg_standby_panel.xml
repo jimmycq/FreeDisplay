@@ -1,14 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <corners android:radius="16dp" />
-    <solid android:color="#d90f172a" />
-    <stroke
-        android:width="1.2dp"
-        android:color="#4064748b" />
-    <padding
-        android:bottom="20dp"
-        android:left="24dp"
-        android:right="24dp"
-        android:top="20dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer specular rim gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#5CFFFFFF"
+                android:centerColor="#24FFFFFF"
+                android:endColor="#12FFFFFF" />
+        </shape>
+    </item>
+    <!-- Frosted translucent glass body -->
+    <item
+        android:bottom="1.2dp"
+        android:left="1.2dp"
+        android:right="1.2dp"
+        android:top="1.2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="22.8dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#B816233B"
+                android:endColor="#A60C1424" />
+            <padding
+                android:bottom="22dp"
+                android:left="26dp"
+                android:right="26dp"
+                android:top="22dp" />
+        </shape>
+    </item>
+</layer-list>

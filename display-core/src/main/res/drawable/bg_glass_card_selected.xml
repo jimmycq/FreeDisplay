@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Active Apple Blue glowing rim -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#E664D2FF"
+                android:endColor="#990A84FF" />
+        </shape>
+    </item>
+    <!-- Selected tinted glass body -->
+    <item
+        android:bottom="1.5dp"
+        android:left="1.5dp"
+        android:right="1.5dp"
+        android:top="1.5dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16.5dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#660A84FF"
+                android:endColor="#400A4F9E" />
+        </shape>
+    </item>
+</layer-list>

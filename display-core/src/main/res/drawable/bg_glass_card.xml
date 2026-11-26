@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Specular glass rim -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#42FFFFFF"
+                android:centerColor="#1FFFFFFF"
+                android:endColor="#10FFFFFF" />
+        </shape>
+    </item>
+    <!-- Frosted translucent body -->
+    <item
+        android:bottom="1dp"
+        android:left="1dp"
+        android:right="1dp"
+        android:top="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="17dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#8C18243A"
+                android:endColor="#78101829" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Deep midnight base -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:startColor="#040812"
+                android:centerColor="#091529"
+                android:endColor="#060E1D"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Top-left aurora blue glow -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:centerX="0.15"
+                android:centerY="0.12"
+                android:gradientRadius="65%p"
+                android:startColor="#380A84FF"
+                android:centerColor="#140A84FF"
+                android:endColor="#000A84FF"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- Bottom-right indigo/cyan ambient orb -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:centerX="0.88"
+                android:centerY="0.85"
+                android:gradientRadius="60%p"
+                android:startColor="#2C5E5CE6"
+                android:centerColor="#1264D2FF"
+                android:endColor="#005E5CE6"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

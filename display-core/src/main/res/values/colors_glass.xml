@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Apple Dark Liquid Glass Tokens -->
+    <color name="glass_bg_dark">#050A14</color>
+    <color name="glass_surface">#80131D30</color>
+    <color name="glass_surface_elevated">#B8162238</color>
+    <color name="glass_surface_dialog">#E6121B2D</color>
+    <color name="glass_surface_selected">#450A84FF</color>
+    <color name="glass_surface_item">#24FFFFFF</color>
+    <color name="glass_surface_item_pressed">#45FFFFFF</color>
+    <color name="glass_surface_input">#73080E1A</color>
+
+    <!-- Specular Rim Highlights -->
+    <color name="glass_stroke_top">#54FFFFFF</color>
+    <color name="glass_stroke_mid">#24FFFFFF</color>
+    <color name="glass_stroke_bottom">#12FFFFFF</color>
+    <color name="glass_stroke_selected">#CC0A84FF</color>
+
+    <!-- Apple System Semantic Colors -->
+    <color name="glass_apple_blue">#0A84FF</color>
+    <color name="glass_apple_blue_dark">#0066CC</color>
+    <color name="glass_apple_cyan">#64D2FF</color>
+    <color name="glass_apple_green">#30D158</color>
+    <color name="glass_apple_orange">#FF9F0A</color>
+    <color name="glass_apple_red">#FF453A</color>
+    <color name="glass_apple_indigo">#5E5CE6</color>
+
+    <!-- Text Hierarchy -->
+    <color name="glass_text_primary">#F5F7FA</color>
+    <color name="glass_text_secondary">#B8C4D6</color>
+    <color name="glass_text_muted">#7E8CA0</color>
+    <color name="glass_text_hint">#566376</color>
+</resources>

@@ -186,10 +186,12 @@ object UpdateChecker {
             append(release.changelog.ifBlank { "包含稳定性增强、手势触控优化与性能提升。" })
         }.toString()
 
-        AlertDialog.Builder(activity)
-            .setTitle("🚀 发现新版本更新")
-            .setMessage(msg)
-            .setPositiveButton("⚡ 极速下载更新") { _, _ ->
+        com.n1tools.box.ui.glass.GlassUiHelper.createGlassMessageDialog(
+            context = activity,
+            title = "🚀 发现新版本更新",
+            message = msg,
+            positiveText = "⚡ 极速下载更新",
+            onPositive = {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(acceleratedDownloadUrl)).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -206,8 +208,9 @@ object UpdateChecker {
                         Toast.makeText(activity, "未能调起下载通道，请访问发布页:\n${release.releaseUrl}", Toast.LENGTH_LONG).show()
                     }
                 }
-            }
-            .setNeutralButton("🌐 查看发布页") { _, _ ->
+            },
+            neutralText = "🌐 查看发布页",
+            onNeutral = {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(release.releaseUrl)).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -216,8 +219,8 @@ object UpdateChecker {
                 } catch (e: Exception) {
                     Toast.makeText(activity, "未能调起浏览器", Toast.LENGTH_SHORT).show()
                 }
-            }
-            .setNegativeButton("稍后再说", null)
-            .show()
+            },
+            negativeText = "稍后再说"
+        ).show()
     }
 }

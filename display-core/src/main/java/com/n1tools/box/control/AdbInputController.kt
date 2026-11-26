@@ -14,16 +14,36 @@ import java.util.concurrent.Executors
  */
 class AdbInputController(
     context: Context,
-    private val host: String
+    private val host: String,
+    val port: Int = 5555
 ) {
+    enum class ConnectionState {
+        IDLE,
+        CONNECTING,
+        CONNECTED,
+        UNAUTHORIZED,
+        REFUSED,
+        FAILED
+    }
+
     private val appContext = context.applicationContext
     private val adbHome = File(appContext.filesDir, ".android")
     private val keyPath = File(adbHome, "adbkey")
-    private val device = "$host:5555"
+    private val device = "$host:$port"
     private val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "AdbInputThread") }
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     @Volatile
     private var connected = false
+    @Volatile
+    var connectionState: ConnectionState = ConnectionState.IDLE
+        private set
+    @Volatile
+    var lastErrorMessage: String = ""
+        private set
+    @Volatile
+    private var lastAttemptMs: Long = 0L
+    var onStateChanged: ((ConnectionState) -> Unit)? = null
     @Volatile
     var sourceWidth: Int = 0
         private set
@@ -84,15 +104,91 @@ class AdbInputController(
         }
     }
 
+    fun getTargetAddress(): String = device
+
     fun connectAsync() {
+        ensureConnectedAsync(force = true)
+    }
+
+    /**
+     * Self-healing connect with 5s cooldown throttle so rapid touches do not flood adb.
+     */
+    fun ensureConnectedAsync(force: Boolean = false) {
+        if (connected && !force) return
+        if (connectionState == ConnectionState.CONNECTING) return
+        val now = System.currentTimeMillis()
+        if (!force && now - lastAttemptMs < 5000L) return
+        lastAttemptMs = now
+        updateState(ConnectionState.CONNECTING, "正在连接 $device...")
+
         executor.execute {
             val output = runAdb("connect", device, timeoutMs = 5000)
-            if (output.contains("unauthorized", ignoreCase = true)) {
+            var sawUnauthorized = output.contains("unauthorized", ignoreCase = true)
+            var sawRefused = output.contains("refused", ignoreCase = true) ||
+                output.contains("failed to connect", ignoreCase = true) ||
+                output.contains("unable to connect", ignoreCase = true)
+
+            if (sawUnauthorized) {
                 Log.w(TAG, "ADB authorization required on $device; approve the RSA prompt on the phone")
             }
-            connected = waitForOnline()
+
+            var online = false
+            repeat(5) { attempt ->
+                if (isDeviceOnline()) {
+                    online = true
+                    return@repeat
+                }
+                val retryOut = runAdb("connect", device, timeoutMs = 3500)
+                if (retryOut.contains("unauthorized", ignoreCase = true)) {
+                    sawUnauthorized = true
+                }
+                if (retryOut.contains("refused", ignoreCase = true) ||
+                    retryOut.contains("failed to connect", ignoreCase = true) ||
+                    retryOut.contains("unable to connect", ignoreCase = true)
+                ) {
+                    sawRefused = true
+                }
+                if (isDeviceOnline()) {
+                    online = true
+                    return@repeat
+                }
+                if (attempt < 4) Thread.sleep(450)
+            }
+
+            connected = online
             Log.i(TAG, "ADB connect result: ${output.trim()}, online=$connected")
-            if (connected) refreshSourceDisplayConfig()
+            if (connected) {
+                updateState(ConnectionState.CONNECTED, "已连接 $device")
+                refreshSourceDisplayConfig()
+                // Schedule delayed re-checks in case desktop-mode virtual display is created after first frame
+                if (sourceDisplayId <= 0) {
+                    mainHandler.postDelayed({ if (connected) refreshSourceDisplayConfigAsync() }, 1500L)
+                    mainHandler.postDelayed({ if (connected) refreshSourceDisplayConfigAsync() }, 3500L)
+                }
+            } else {
+                when {
+                    sawUnauthorized -> updateState(
+                        ConnectionState.UNAUTHORIZED,
+                        "等待手机端授权：请在手机弹窗点击「允许 USB/无线调试」"
+                    )
+                    sawRefused -> updateState(
+                        ConnectionState.REFUSED,
+                        "端口 $port 未开启：请在手机开启无线调试或执行 adb tcpip $port"
+                    )
+                    else -> updateState(
+                        ConnectionState.FAILED,
+                        "连接 $device 超时，请确认手机与平板在同一网络"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun updateState(state: ConnectionState, message: String) {
+        connectionState = state
+        lastErrorMessage = message
+        mainHandler.post {
+            onStateChanged?.invoke(state)
         }
     }
 

@@ -54,6 +54,8 @@ jobs:
 
           if [ -f "freedisplay/build/outputs/apk/debug/freedisplay-debug.apk" ]; then
             cp "freedisplay/build/outputs/apk/debug/freedisplay-debug.apk" "release_apks/FreeDisplay-${TAG}.apk"
+          elif [ -f "/tmp/n1_build/freedisplay/outputs/apk/debug/freedisplay-debug.apk" ]; then
+            cp "/tmp/n1_build/freedisplay/outputs/apk/debug/freedisplay-debug.apk" "release_apks/FreeDisplay-${TAG}.apk"
           fi
 
           cd release_apks
@@ -77,18 +79,18 @@ jobs:
           body: |
             ## 📱 Free Display ${{ steps.prepare_artifacts.outputs.tag }} 发布
 
-            > **📅 发布日期**：2026年11月21日  
+            > **📅 发布日期**：2026年11月26日  
             > **通用、轻量、低延迟无线副屏接收端软件，让闲置设备秒变专业低延迟副屏。**
 
             ### 📦 下载安装
             - **`FreeDisplay-${{ steps.prepare_artifacts.outputs.tag }}.apk`**：**安卓通用安装包**（支持主流 Android 手机、平板及智能电视免 Root 直接安装使用）
 
-            ### 🚀 主要特性
-            - 🖥️ **电脑无线扩展 / 镜像**：支持 60fps 高帧率、低延迟硬件直通解码
-            - 📱 **移动端投屏**：兼容 Wi-Fi Display (Miracast)，支持手机镜像与电脑桌面模式
-            - 👆 **反向触控精准映射**：零漂移视口黑边消除，指哪打哪
-            - ⚡ **快速热点与直连**：内置 2.4GHz 快速热点支持与扫码极速互联
-            - 🖼️ **纯净待机模式**：沉浸极简待机画面，免打扰
+            ### 🚀 v1.1.0 更新亮点
+            - ✨ **Apple Liquid Glass 液态玻璃 UI**：全新磨砂高光待机面板、精简顶部控制中心与「⋯ 更多」玻璃网格面板，彻底解决底部裁剪
+            - 📐 **关于弹窗横竖屏动态布局**：竖屏单列、横屏双栏并排展示，全区块统一玻璃卡片边框
+            - 💻 **完整支持 Windows 无线副屏触控**：支持 Windows 10/11 (`Win+K`) Miracast UIBC 点击与拖拽滑动，内置 Windows 开启向导
+            - 📱 **Android / 鸿蒙反向触控增强**：支持自愈重连、自定义端口及单弹窗分步开启向导（含鸿蒙 4.2 专属指引）
+            - 🖼️ **纯净待机 & 弹窗互斥**：有弹窗显示时自动隐藏待机信息，视觉更专注
 
             校验和见附带的 `sha256_checksums.txt`。
         env:

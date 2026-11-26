@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer specular rim gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="22dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="@color/glass_stroke_top"
+                android:centerColor="@color/glass_stroke_mid"
+                android:endColor="@color/glass_stroke_bottom" />
+        </shape>
+    </item>
+    <!-- Inner frosted glass fill -->
+    <item
+        android:bottom="1dp"
+        android:left="1dp"
+        android:right="1dp"
+        android:top="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="21dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#991A273F"
+                android:endColor="#850E1728" />
+        </shape>
+    </item>
+</layer-list>
