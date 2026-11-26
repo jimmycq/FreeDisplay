@@ -18,10 +18,28 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    signingConfigs {
+        val localKeystore = rootProject.file("freedisplay-release.jks")
+        val ciKeystore = file("release.jks")
+        val targetKeystore = when {
+            ciKeystore.exists() -> ciKeystore
+            localKeystore.exists() -> localKeystore
+            else -> null
+        }
+        if (targetKeystore != null) {
+            create("release") {
+                storeFile = targetKeystore
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "freedisplay2026"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "freedisplay"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "freedisplay2026"
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

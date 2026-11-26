@@ -190,37 +190,242 @@ object UpdateChecker {
             context = activity,
             title = "🚀 发现新版本更新",
             message = msg,
-            positiveText = "⚡ 极速下载更新",
+            positiveText = "⚡ 立即更新",
             onPositive = {
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(acceleratedDownloadUrl)).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val rawUrl = release.apkDownloadUrl
+                if (rawUrl.isNullOrBlank()) {
+                    openUrlInBrowser(activity, release.releaseUrl)
+                } else {
+                    startInAppDownloadAndInstall(activity, acceleratedDownloadUrl, rawUrl, release.tagName)
+                }
+            },
+            neutralText = "🌐 发布页",
+            onNeutral = {
+                openUrlInBrowser(activity, release.releaseUrl)
+            },
+            negativeText = "稍后"
+        ).show()
+    }
+
+    private fun openUrlInBrowser(activity: Activity, url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(activity, "未能调起浏览器，请手动访问:\n$url", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun startInAppDownloadAndInstall(
+        activity: Activity,
+        primaryUrl: String,
+        fallbackUrl: String,
+        tagName: String
+    ) {
+        val dp = { v: Int -> com.n1tools.box.ui.glass.GlassUiHelper.dp(activity, v) }
+        val secondaryColor = androidx.core.content.ContextCompat.getColor(
+            activity,
+            com.n1tools.display.R.color.glass_text_secondary
+        )
+
+        val statusTv = android.widget.TextView(activity).apply {
+            text = "正在连接下载服务器..."
+            setTextColor(secondaryColor)
+            textSize = 13f
+            setPadding(0, 0, 0, dp(10))
+        }
+
+        val progressBar = android.widget.ProgressBar(
+            activity,
+            null,
+            android.R.attr.progressBarStyleHorizontal
+        ).apply {
+            max = 100
+            progress = 0
+            isIndeterminate = true
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(8)
+            )
+        }
+
+        val container = android.widget.LinearLayout(activity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            addView(statusTv)
+            addView(progressBar)
+        }
+
+        val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val progressDialog = com.n1tools.box.ui.glass.GlassUiHelper.createGlassDialog(
+            context = activity,
+            title = "⬇️ 正在下载更新 ($tagName)",
+            contentView = container,
+            negativeText = "取消下载",
+            onNegative = {
+                cancelled.set(true)
+            },
+            cancelable = false
+        )
+        progressDialog.show()
+
+        executor.execute {
+            val updateDir = java.io.File(activity.cacheDir, "update").apply { mkdirs() }
+            val apkFile = java.io.File(updateDir, "FreeDisplay-$tagName.apk")
+            if (apkFile.exists()) apkFile.delete()
+
+            val downloaded = downloadFileWithProgress(
+                urls = listOf(primaryUrl, fallbackUrl).distinct(),
+                destFile = apkFile,
+                isCancelled = { cancelled.get() || activity.isFinishing }
+            ) { bytesRead, totalBytes ->
+                activity.runOnUiThread {
+                    if (activity.isFinishing || cancelled.get()) return@runOnUiThread
+                    val readMb = String.format(java.util.Locale.US, "%.2f", bytesRead / (1024.0 * 1024.0))
+                    if (totalBytes > 0) {
+                        val totalMb = String.format(java.util.Locale.US, "%.2f", totalBytes / (1024.0 * 1024.0))
+                        val pct = ((bytesRead * 100L) / totalBytes).toInt().coerceIn(0, 100)
+                        progressBar.isIndeterminate = false
+                        progressBar.progress = pct
+                        statusTv.text = "已下载 $readMb MB / $totalMb MB ($pct%)"
+                    } else {
+                        progressBar.isIndeterminate = true
+                        statusTv.text = "已下载 $readMb MB..."
                     }
-                    activity.startActivity(intent)
-                } catch (e: Exception) {
-                    // 若加速端点调起失败，无缝回退原生直链
+                }
+            }
+
+            activity.runOnUiThread {
+                if (progressDialog.isShowing) {
+                    progressDialog.dismiss()
+                }
+                if (cancelled.get() || activity.isFinishing) return@runOnUiThread
+
+                if (!downloaded || !apkFile.exists() || apkFile.length() == 0L) {
+                    Toast.makeText(activity, "下载失败，正在为您打开浏览器下载页", Toast.LENGTH_LONG).show()
+                    openUrlInBrowser(activity, fallbackUrl)
+                    return@runOnUiThread
+                }
+
+                installDownloadedApk(activity, apkFile)
+            }
+        }
+    }
+
+    private fun downloadFileWithProgress(
+        urls: List<String>,
+        destFile: java.io.File,
+        isCancelled: () -> Boolean,
+        onProgress: (bytesRead: Long, totalBytes: Long) -> Unit
+    ): Boolean {
+        for (targetUrl in urls) {
+            var conn: HttpURLConnection? = null
+            try {
+                conn = (URL(targetUrl).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 12000
+                    readTimeout = 20000
+                    instanceFollowRedirects = true
+                    setRequestProperty("User-Agent", "FreeDisplay-Android")
+                }
+                if (conn.responseCode !in 200..299) {
+                    Log.w(TAG, "Download returned HTTP ${conn.responseCode} for $targetUrl")
+                    continue
+                }
+                val totalBytes = conn.contentLength.toLong()
+                var bytesRead = 0L
+                val buf = ByteArray(16 * 1024)
+                var lastReportMs = 0L
+
+                conn.inputStream.use { input ->
+                    java.io.FileOutputStream(destFile).use { output ->
+                        while (!isCancelled()) {
+                            val n = input.read(buf)
+                            if (n <= 0) break
+                            output.write(buf, 0, n)
+                            bytesRead += n
+                            val now = System.currentTimeMillis()
+                            if (now - lastReportMs >= 120L || (totalBytes > 0 && bytesRead >= totalBytes)) {
+                                lastReportMs = now
+                                onProgress(bytesRead, totalBytes)
+                            }
+                        }
+                    }
+                }
+                if (isCancelled()) {
+                    destFile.delete()
+                    return false
+                }
+                return true
+            } catch (e: Exception) {
+                Log.w(TAG, "Download failed for $targetUrl: ${e.message}")
+                if (destFile.exists()) destFile.delete()
+            } finally {
+                conn?.disconnect()
+            }
+        }
+        return false
+    }
+
+    private fun installDownloadedApk(activity: Activity, apkFile: java.io.File) {
+        // 1. Try silent root install first (e.g. Nokia N1)
+        executor.execute {
+            val rootInstalled = try {
+                val proc = ProcessBuilder("su", "-c", "pm install -r ${apkFile.absolutePath}")
+                    .redirectErrorStream(true)
+                    .start()
+                val out = proc.inputStream.bufferedReader().readText()
+                val code = proc.waitFor()
+                code == 0 && out.contains("Success", ignoreCase = true)
+            } catch (_: Exception) {
+                false
+            }
+            if (rootInstalled) {
+                activity.runOnUiThread {
+                    Toast.makeText(activity, "更新安装成功，请重新打开应用", Toast.LENGTH_LONG).show()
+                }
+                return@execute
+            }
+
+            // 2. Fallback to standard Android FileProvider installer UI
+            activity.runOnUiThread {
+                if (activity.isFinishing) return@runOnUiThread
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+                    !activity.packageManager.canRequestPackageInstalls()
+                ) {
+                    Toast.makeText(
+                        activity,
+                        "请开启「允许安装未知应用」权限后再次点击安装",
+                        Toast.LENGTH_LONG
+                    ).show()
                     try {
-                        val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(rawDownloadUrl)).apply {
+                        val settingsIntent = Intent(
+                            android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:${activity.packageName}")
+                        ).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        activity.startActivity(fallbackIntent)
-                    } catch (ex: Exception) {
-                        Toast.makeText(activity, "未能调起下载通道，请访问发布页:\n${release.releaseUrl}", Toast.LENGTH_LONG).show()
-                    }
+                        activity.startActivity(settingsIntent)
+                    } catch (_: Exception) {}
+                    return@runOnUiThread
                 }
-            },
-            neutralText = "🌐 查看发布页",
-            onNeutral = {
+
                 try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(release.releaseUrl)).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    val apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        activity,
+                        "${activity.packageName}.fileprovider",
+                        apkFile
+                    )
+                    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(apkUri, "application/vnd.android.package-archive")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    activity.startActivity(intent)
+                    activity.startActivity(installIntent)
                 } catch (e: Exception) {
-                    Toast.makeText(activity, "未能调起浏览器", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Failed to launch APK installer", e)
+                    Toast.makeText(activity, "调起安装器失败: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-            },
-            negativeText = "稍后再说"
-        ).show()
+            }
+        }
     }
 }

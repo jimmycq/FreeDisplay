@@ -242,14 +242,16 @@ object GlassUiHelper {
         return TextView(context).apply {
             text = label
             setTextColor(Color.WHITE)
-            textSize = 13.5f
+            textSize = 12.5f
+            isSingleLine = true
+            ellipsize = android.text.TextUtils.TruncateAt.END
             if (accent) {
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
             gravity = Gravity.CENTER
             setBackgroundResource(if (accent) R.drawable.bg_glass_pill_accent else R.drawable.bg_glass_pill)
-            setPadding(dp(context, 18), dp(context, 9), dp(context, 18), dp(context, 9))
-            minimumHeight = dp(context, 38)
+            setPadding(dp(context, 13), dp(context, 8), dp(context, 13), dp(context, 8))
+            minimumHeight = dp(context, 36)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT

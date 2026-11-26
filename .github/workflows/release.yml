@@ -43,8 +43,28 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
+      - name: Decode Release Keystore (if configured)
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > freedisplay/release.jks
+            echo "HAS_RELEASE_KEYSTORE=true" >> $GITHUB_ENV
+          else
+            echo "HAS_RELEASE_KEYSTORE=false" >> $GITHUB_ENV
+          fi
+
       - name: Build Free Display APK
-        run: ./gradlew :freedisplay:assembleDebug --no-daemon --stacktrace
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ "$HAS_RELEASE_KEYSTORE" = "true" ]; then
+            ./gradlew :freedisplay:assembleRelease --no-daemon --stacktrace
+          else
+            ./gradlew :freedisplay:assembleDebug --no-daemon --stacktrace
+          fi
 
       - name: Prepare Release Artifacts
         id: prepare_artifacts
@@ -52,7 +72,9 @@ jobs:
           TAG="${{ github.event.inputs.tag_name || github.ref_name }}"
           mkdir -p release_apks
 
-          if [ -f "freedisplay/build/outputs/apk/debug/freedisplay-debug.apk" ]; then
+          if [ -f "freedisplay/build/outputs/apk/release/freedisplay-release.apk" ]; then
+            cp "freedisplay/build/outputs/apk/release/freedisplay-release.apk" "release_apks/FreeDisplay-${TAG}.apk"
+          elif [ -f "freedisplay/build/outputs/apk/debug/freedisplay-debug.apk" ]; then
             cp "freedisplay/build/outputs/apk/debug/freedisplay-debug.apk" "release_apks/FreeDisplay-${TAG}.apk"
           elif [ -f "/tmp/n1_build/freedisplay/outputs/apk/debug/freedisplay-debug.apk" ]; then
             cp "/tmp/n1_build/freedisplay/outputs/apk/debug/freedisplay-debug.apk" "release_apks/FreeDisplay-${TAG}.apk"
