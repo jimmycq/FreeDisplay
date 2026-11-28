@@ -186,7 +186,7 @@
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
-            <!-- 主控制条：自适应单行/双行等宽紧凑胶囊，彻底消除左右滑动与边缘剪切 -->
+            <!-- 控制中心展开面板：12个统一4字+状态操作，按屏幕宽度自适应 6×2 / 4×3 / 3×4 等宽网格，零滑动零剪切 -->
             <LinearLayout
                 android:id="@+id/layoutControlCard"
                 android:layout_width="wrap_content"
@@ -197,10 +197,10 @@
                 android:clipToPadding="false"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingStart="8dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="6dp">
+                android:paddingStart="10dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="8dp">
 
                 <LinearLayout
                     android:id="@+id/layoutControlRow1"
@@ -211,122 +211,196 @@
                     android:gravity="center"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/btnExitAirPlay"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="6dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:minWidth="74dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:singleLine="true"
-                        android:text="✕ 退出"
-                        android:textColor="#FF6961"
-                        android:textSize="12.5sp" />
-
-                    <!-- 1. 声音模式 -->
+                    <!-- 1. 声音输出 -->
                     <TextView
                         android:id="@+id/btnAudioMode"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="78dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="🔇 本机"
+                        android:text="🔇 声音输出·本机"
                         android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
 
-                    <!-- 2. 画面模式：适应 / 充满 / 拉伸 / 原生 -->
+                    <!-- 2. 画面比例 -->
                     <TextView
                         android:id="@+id/btnScaleMode"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="78dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="📐 适应"
+                        android:text="📐 画面比例·适应"
                         android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
 
-                    <!-- 3. 屏幕方向旋转：自动 / 横屏 / 竖屏 -->
+                    <!-- 3. 屏幕旋转 -->
                     <TextView
                         android:id="@+id/btnRotate"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="78dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="🔄 自动"
+                        android:text="🔄 屏幕旋转·自动"
                         android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
 
-                    <!-- 4. 画质档位切换：超清 / 均衡 / 流畅 -->
+                    <!-- 4. 画质档位 -->
                     <TextView
                         android:id="@+id/btnQualityMode"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="78dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="🌟 超清"
+                        android:text="🌟 画质档位·超清"
                         android:textColor="#30D158"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
 
-                    <!-- 5. 反向触控：自动启用 + 点击重连/改端口 -->
+                    <!-- 5. 反向触控 -->
                     <TextView
                         android:id="@+id/btnReverseTouch"
-                        android:layout_width="wrap_content"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="82dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="🖱 待机"
+                        android:text="🖱 反向触控·待机"
                         android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
 
-                    <!-- 6. 更多控制网格开关 -->
+                    <!-- 6. 纯净待机 -->
                     <TextView
-                        android:id="@+id/btnMoreControls"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/btnCleanStandby"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="🖼 纯净待机·关闭"
+                        android:textColor="#ffffff"
+                        android:textSize="12sp" />
+
+                    <!-- 7. 快速热点 -->
+                    <TextView
+                        android:id="@+id/btnHotspot"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="🔥 快速热点·关闭"
+                        android:textColor="#ffffff"
+                        android:textSize="12sp" />
+
+                    <!-- 8. 分享应用 -->
+                    <TextView
+                        android:id="@+id/btnShare"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="📤 分享应用"
+                        android:textColor="#ffffff"
+                        android:textSize="12sp" />
+
+                    <!-- 9. 修改名称 -->
+                    <TextView
+                        android:id="@+id/btnRenameDevice"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="✏ 修改名称"
+                        android:textColor="#ffffff"
+                        android:textSize="12sp" />
+
+                    <!-- 10. 关于软件 -->
+                    <TextView
+                        android:id="@+id/btnAbout"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="ℹ 关于软件"
+                        android:textColor="#ffffff"
+                        android:textSize="12sp" />
+
+                    <!-- 11. 退出投屏（固定在最后一行） -->
+                    <TextView
+                        android:id="@+id/btnExitAirPlay"
+                        android:layout_width="132dp"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_control_item"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:singleLine="true"
+                        android:text="✕ 退出投屏"
+                        android:textColor="#FF6961"
+                        android:textSize="12sp" />
+
+                    <!-- 12. 收起面板（固定在最后一行末尾） -->
+                    <TextView
+                        android:id="@+id/btnCollapsePanel"
+                        android:layout_width="132dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="74dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:singleLine="true"
-                        android:text="⋯ 更多"
+                        android:text="▲ 收起面板"
                         android:textColor="#64D2FF"
-                        android:textSize="12.5sp" />
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -339,111 +413,50 @@
                     android:gravity="center"
                     android:orientation="horizontal"
                     android:visibility="gone" />
-            </LinearLayout>
 
-            <!-- 「⋯ 更多」展开玻璃网格面板（功能操作与连接管理） -->
-            <LinearLayout
-                android:id="@+id/layoutMorePanel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_glass_panel"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:visibility="gone">
-
-                <!-- 第一行：显示与连接 -->
                 <LinearLayout
+                    android:id="@+id/layoutControlRow3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/btnCleanStandby"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="🖼 纯净待机: 关"
-                        android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
-
-                    <TextView
-                        android:id="@+id/btnHotspot"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="🔥 快速热点: 关"
-                        android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
-
-                    <TextView
-                        android:id="@+id/btnTouchSettings"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="🖱 触控与端口"
-                        android:textColor="#64D2FF"
-                        android:textSize="12.5sp" />
-                </LinearLayout>
-
-                <!-- 第二行：应用操作 -->
                 <LinearLayout
+                    android:id="@+id/layoutControlRow4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/btnShare"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="📤 分享安装包"
-                        android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
+                <LinearLayout
+                    android:id="@+id/layoutControlRow5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/btnFeedback"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="💬 意见反馈"
-                        android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
-
-                    <TextView
-                        android:id="@+id/btnAbout"
-                        android:layout_width="118dp"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_control_item"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:singleLine="true"
-                        android:text="ℹ 关于本软件"
-                        android:textColor="#ffffff"
-                        android:textSize="12.5sp" />
-                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/layoutControlRow6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 
