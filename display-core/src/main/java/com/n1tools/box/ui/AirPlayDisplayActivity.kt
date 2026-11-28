@@ -15,7 +15,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -75,7 +74,9 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private var adbPort: Int = 5555
     private lateinit var mTvDisplayTitle: TextView
     private lateinit var mTvInstructionGuide: TextView
-    private lateinit var layoutControlCard: HorizontalScrollView
+    private lateinit var layoutControlCard: LinearLayout
+    private lateinit var layoutControlRow1: LinearLayout
+    private lateinit var layoutControlRow2: LinearLayout
     private lateinit var btnOpenDrawer: View
     private lateinit var layoutSwitchDeviceOverlay: View
     private lateinit var tvSwitchTitle: TextView
@@ -113,6 +114,7 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
+        updateControlBarLayoutForScreen(newConfig.screenWidthDp)
         if (aboutDialog?.isShowing == true) {
             aboutDialog?.dismiss()
             showAboutDialog()
@@ -213,17 +215,14 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         mSurfaceView = findViewById(R.id.surfaceView)
         layoutControlCard = findViewById(R.id.layoutControlCard)
+        layoutControlRow1 = findViewById(R.id.layoutControlRow1)
+        layoutControlRow2 = findViewById(R.id.layoutControlRow2)
         layoutControlCard.setOnTouchListener { _, event ->
             if (event.actionMasked == MotionEvent.ACTION_DOWN ||
                 event.actionMasked == MotionEvent.ACTION_MOVE) {
                 scheduleAutoHideControls(5000L)
             }
             false
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            layoutControlCard.setOnScrollChangeListener { _, _, _, _, _ ->
-                scheduleAutoHideControls(5000L)
-            }
         }
         btnOpenDrawer = findViewById(R.id.btnOpenDrawer)
         btnOpenDrawer.setOnClickListener {
@@ -435,18 +434,20 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
             when (currentOrientationMode) {
                 0 -> {
                     requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR
-                    mBtnRotate.text = "🔄 旋转: 自动"
+                    mBtnRotate.text = "🔄 自动"
                 }
                 1 -> {
                     requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    mBtnRotate.text = "🔄 旋转: 横屏"
+                    mBtnRotate.text = "🔄 横屏"
                 }
                 2 -> {
                     requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    mBtnRotate.text = "🔄 旋转: 竖屏"
+                    mBtnRotate.text = "🔄 竖屏"
                 }
             }
         }
+
+        updateControlBarLayoutForScreen(resources.configuration.screenWidthDp)
 
         window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
             if ((visibility and View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
@@ -752,8 +753,56 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
     }
 
+    private fun updateControlBarLayoutForScreen(screenWidthDp: Int) {
+        if (!::layoutControlRow1.isInitialized || !::layoutControlRow2.isInitialized) return
+        val buttons = listOf(
+            mBtnExit, mBtnAudioMode, mBtnScaleMode, mBtnRotate,
+            mBtnQualityMode, mBtnReverseTouch, mBtnMoreControls
+        )
+        val gapPx = com.n1tools.box.ui.glass.GlassUiHelper.dp(this, 6)
+        layoutControlRow1.removeAllViews()
+        layoutControlRow2.removeAllViews()
+
+        if (screenWidthDp >= 600) {
+            layoutControlRow2.visibility = View.GONE
+            buttons.forEachIndexed { idx, btn ->
+                val lp = (btn.layoutParams as? LinearLayout.LayoutParams)
+                    ?: LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        com.n1tools.box.ui.glass.GlassUiHelper.dp(this, 36)
+                    )
+                lp.marginEnd = if (idx < buttons.lastIndex) gapPx else 0
+                btn.layoutParams = lp
+                layoutControlRow1.addView(btn)
+            }
+        } else {
+            layoutControlRow2.visibility = View.VISIBLE
+            val row1Buttons = buttons.subList(0, 4)
+            val row2Buttons = buttons.subList(4, buttons.size)
+            row1Buttons.forEachIndexed { idx, btn ->
+                val lp = (btn.layoutParams as? LinearLayout.LayoutParams)
+                    ?: LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        com.n1tools.box.ui.glass.GlassUiHelper.dp(this, 36)
+                    )
+                lp.marginEnd = if (idx < row1Buttons.lastIndex) gapPx else 0
+                btn.layoutParams = lp
+                layoutControlRow1.addView(btn)
+            }
+            row2Buttons.forEachIndexed { idx, btn ->
+                val lp = (btn.layoutParams as? LinearLayout.LayoutParams)
+                    ?: LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        com.n1tools.box.ui.glass.GlassUiHelper.dp(this, 36)
+                    )
+                lp.marginEnd = if (idx < row2Buttons.lastIndex) gapPx else 0
+                btn.layoutParams = lp
+                layoutControlRow2.addView(btn)
+            }
+        }
+    }
+
     private fun showControlCardAnimated() {
-        layoutControlCard.scrollTo(0, 0)
         layoutControlCard.visibility = View.VISIBLE
         layoutControlCard.alpha = 0f
         layoutControlCard.translationY = -15f
@@ -1308,15 +1357,15 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private fun updateQualityModeUi() {
         when (currentQualityMode) {
             0 -> {
-                mBtnQualityMode.text = "🌟 画质: 超清"
+                mBtnQualityMode.text = "🌟 超清"
                 mBtnQualityMode.setTextColor(android.graphics.Color.parseColor("#22c55e"))
             }
             1 -> {
-                mBtnQualityMode.text = "🌟 画质: 均衡"
+                mBtnQualityMode.text = "🌟 均衡"
                 mBtnQualityMode.setTextColor(android.graphics.Color.parseColor("#38bdf8"))
             }
             2 -> {
-                mBtnQualityMode.text = "🌟 画质: 流畅"
+                mBtnQualityMode.text = "🌟 流畅"
                 mBtnQualityMode.setTextColor(android.graphics.Color.parseColor("#eab308"))
             }
         }
@@ -1325,10 +1374,10 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private fun updateAudioModeUi() {
         if (!::mBtnAudioMode.isInitialized) return
         if (isAudioSinkEnabled) {
-            mBtnAudioMode.text = "🔊 声音: 副屏"
+            mBtnAudioMode.text = "🔊 副屏"
             mBtnAudioMode.setTextColor(android.graphics.Color.parseColor("#22c55e"))
         } else {
-            mBtnAudioMode.text = "🔇 声音: 本机"
+            mBtnAudioMode.text = "🔇 本机"
             mBtnAudioMode.setTextColor(android.graphics.Color.parseColor("#ffffff"))
         }
     }
@@ -1346,19 +1395,19 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
         if (!::mBtnScaleMode.isInitialized) return
         when (currentScaleMode) {
             PlaySurfaceView.SCALE_ZOOM -> {
-                mBtnScaleMode.text = "🔍 画面: 等比充满"
+                mBtnScaleMode.text = "🔍 充满"
                 mBtnScaleMode.setTextColor(android.graphics.Color.parseColor("#38bdf8"))
             }
             PlaySurfaceView.SCALE_FILL -> {
-                mBtnScaleMode.text = "↔️ 画面: 拉伸全屏"
+                mBtnScaleMode.text = "↔️ 拉伸"
                 mBtnScaleMode.setTextColor(android.graphics.Color.parseColor("#22c55e"))
             }
             PlaySurfaceView.SCALE_ORIGINAL -> {
-                mBtnScaleMode.text = "🎯 画面: 1:1原生"
+                mBtnScaleMode.text = "🎯 原生"
                 mBtnScaleMode.setTextColor(android.graphics.Color.parseColor("#f59e0b"))
             }
             else -> {
-                mBtnScaleMode.text = "📐 画面: 比例适应"
+                mBtnScaleMode.text = "📐 适应"
                 mBtnScaleMode.setTextColor(android.graphics.Color.parseColor("#ffffff"))
             }
         }
@@ -1773,36 +1822,36 @@ class AirPlayDisplayActivity : AppCompatActivity(), SurfaceHolder.Callback {
         }
         when {
             activeSource == DisplaySource.NONE -> {
-                mBtnReverseTouch.text = "🖱 触控: 未投屏"
+                mBtnReverseTouch.text = "🖱 未投屏"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
             }
             activeSource == DisplaySource.MAC -> {
-                mBtnReverseTouch.text = "🖱 触控: 不可用"
+                mBtnReverseTouch.text = "🖱 不可用"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
             }
             isWindows -> {
                 if (miracastServer?.isUibcConnected == true) {
-                    mBtnReverseTouch.text = "🖱 触控: Win已就绪"
+                    mBtnReverseTouch.text = "🖱 Win✓"
                     mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#30D158"))
                 } else {
-                    mBtnReverseTouch.text = "🖱 触控: Win未开启"
+                    mBtnReverseTouch.text = "🖱 Win✗"
                     mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF9F0A"))
                 }
             }
             ctrl == null -> {
-                mBtnReverseTouch.text = "🖱 触控: 未连接"
+                mBtnReverseTouch.text = "🖱 未连"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#B8C4D6"))
             }
             ctrl.connectionState == AdbInputController.ConnectionState.CONNECTED -> {
-                mBtnReverseTouch.text = "🖱 触控: 已就绪"
+                mBtnReverseTouch.text = "🖱 已就绪"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#30D158"))
             }
             ctrl.connectionState == AdbInputController.ConnectionState.CONNECTING -> {
-                mBtnReverseTouch.text = "🖱 触控: 连接中"
+                mBtnReverseTouch.text = "🖱 连接中"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF9F0A"))
             }
             else -> {
-                mBtnReverseTouch.text = "🖱 触控: 未连接"
+                mBtnReverseTouch.text = "🖱 未连"
                 mBtnReverseTouch.setTextColor(android.graphics.Color.parseColor("#FF6961"))
             }
         }

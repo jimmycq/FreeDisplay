@@ -186,8 +186,8 @@
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
-            <!-- 主控制条：7个高频核心胶囊，支持窄屏平滑滚动，上下留足空间防剪切 -->
-            <HorizontalScrollView
+            <!-- 主控制条：自适应单行/双行等宽紧凑胶囊，彻底消除左右滑动与边缘剪切 -->
+            <LinearLayout
                 android:id="@+id/layoutControlCard"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -195,19 +195,20 @@
                 android:background="@drawable/bg_control_card"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:overScrollMode="ifContentScrolls"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
                 android:paddingStart="8dp"
                 android:paddingTop="6dp"
                 android:paddingEnd="8dp"
-                android:paddingBottom="8dp"
-                android:scrollbars="none">
+                android:paddingBottom="6dp">
 
                 <LinearLayout
+                    android:id="@+id/layoutControlRow1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clipChildren="false"
                     android:clipToPadding="false"
-                    android:gravity="center_vertical"
+                    android:gravity="center"
                     android:orientation="horizontal">
 
                     <TextView
@@ -219,8 +220,8 @@
                         android:gravity="center"
                         android:includeFontPadding="false"
                         android:minWidth="74dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
                         android:text="✕ 退出"
                         android:textColor="#FF6961"
@@ -235,15 +236,15 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="104dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="78dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
-                        android:text="🔇 声音: 本机"
+                        android:text="🔇 本机"
                         android:textColor="#ffffff"
                         android:textSize="12.5sp" />
 
-                    <!-- 2. 画面模式：适应 / 铺满 / 放大 -->
+                    <!-- 2. 画面模式：适应 / 充满 / 拉伸 / 原生 -->
                     <TextView
                         android:id="@+id/btnScaleMode"
                         android:layout_width="wrap_content"
@@ -252,11 +253,11 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="104dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="78dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
-                        android:text="📐 画面: 适应"
+                        android:text="📐 适应"
                         android:textColor="#ffffff"
                         android:textSize="12.5sp" />
 
@@ -269,11 +270,11 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="104dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="78dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
-                        android:text="🔄 旋转: 自动"
+                        android:text="🔄 自动"
                         android:textColor="#ffffff"
                         android:textSize="12.5sp" />
 
@@ -286,11 +287,11 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="104dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="78dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
-                        android:text="🌟 画质: 超清"
+                        android:text="🌟 超清"
                         android:textColor="#30D158"
                         android:textSize="12.5sp" />
 
@@ -303,11 +304,11 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="108dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="82dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
-                        android:text="🖱 触控: 待机"
+                        android:text="🖱 待机"
                         android:textColor="#ffffff"
                         android:textSize="12.5sp" />
 
@@ -319,15 +320,26 @@
                         android:background="@drawable/bg_control_item"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:minWidth="78dp"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:minWidth="74dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
                         android:singleLine="true"
                         android:text="⋯ 更多"
                         android:textColor="#64D2FF"
                         android:textSize="12.5sp" />
                 </LinearLayout>
-            </HorizontalScrollView>
+
+                <LinearLayout
+                    android:id="@+id/layoutControlRow2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
+            </LinearLayout>
 
             <!-- 「⋯ 更多」展开玻璃网格面板（功能操作与连接管理） -->
             <LinearLayout
